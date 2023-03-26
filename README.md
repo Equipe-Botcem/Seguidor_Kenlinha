@@ -9,19 +9,21 @@ Neste repositório estão presentes todos os códigos utilizados no desenvolvime
 - Visual Studio Code com a extensão PlatformioIO
 - Dispositivo Android com o app do Seguidor de Linha instalado
 
-### Como transmitir o código para o Seguidor
+### Como transmitir o código
+Para transmitir o código para o seguidor basta seguir o passo-a-passo:
 - Fazer o download do diretório no formato .zip pelo GitHub
 - Extrair os arquivos para uma pasta
 - Abrir o código por meio da extensão PlatformioIO no Visual Studio Code
 - Fazer o upload a partir do PlatformioIO para o Arduino Nano
+
 Obs.: Caso o upload não funcione, desconecte o módulo bluetooth do Seguidor e tente fazer o upload novamente.
 
-### Controlando o seguidor
+### Iniciando o seguidor
 Após instalar o app em um dipositivo, já é possível controlar o seguidor! 😃
 
 Para configurar o seguidor é necessário seguir os seguintes passos:
 - Transmitir o código para o seguidor conforme os passos anteriores
-- Ligar o seguidor de linha e colocá-lo na pista de forma que todos os seus sensores frontais fiquem sobre a linha que deve ser seguida.
+- Ligar o seguidor e colocá-lo na pista de forma que todos os seus sensores frontais fiquem sobre a linha que deve ser seguida.
 - Fazer o pareamento bluetooth com o módulo “HC-05’ (senha de pareamento: 1234)
 - Abrir o app e pressionar “Conectar”
 - Selecionar “HC-05” na lista
