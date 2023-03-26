@@ -19,7 +19,7 @@ Para transmitir o código para o seguidor basta seguir o passo-a-passo:
 Obs.: Caso o upload não funcione, desconecte o módulo bluetooth do Seguidor e tente fazer o upload novamente.
 
 ### Iniciando o seguidor
-Após instalar o app em um dipositivo, já é possível controlar o seguidor! 😃
+Após instalar o app em um dispositivo, já é possível controlar o seguidor! 😃
 
 Para configurar o seguidor é necessário seguir os seguintes passos:
 - Transmitir o código para o seguidor conforme os passos anteriores
