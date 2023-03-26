@@ -1,1 +1,0 @@
-# seguidor_omega_2022
