@@ -1,7 +1,7 @@
 # Seguidor Ômega
 Neste repositório estão presentes todos os códigos utilizados no desenvolvimento do Seguidor de Linha Ômega da equipe BOTCEM em 2022. Especificamente contém:
 - Código em C++ do Arduino Nano
-- App para controle do seguidor desenvolvido por meio da plataforma [Kodular](https://creator.kodular.io/)
+- Código fonte e App do controle do seguidor desenvolvido por meio da plataforma [Kodular](https://creator.kodular.io/)
 
 ## Guia básico
 
