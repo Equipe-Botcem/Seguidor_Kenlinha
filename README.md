@@ -18,6 +18,7 @@ Obs.: Caso o upload não funcione, desconecte o módulo bluetooth do Seguidor e 
 
 ### Controlando o seguidor
 Após instalar o app em um dipositivo, já é possível controlar o seguidor! 😃
+
 Para configurar o seguidor é necessário seguir os seguintes passos:
 - Ligar o seguidor de linha e colocá-lo na pista de forma que todos os seus sensores frontais fiquem sobre a linha que deve ser seguida.
 - Fazer o pareamento bluetooth com o módulo “HC-05’ (senha de pareamento: 1234)
