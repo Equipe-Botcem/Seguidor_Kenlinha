@@ -13,7 +13,7 @@ Neste repositório estão presentes todos os códigos utilizados no desenvolvime
 Para transmitir o código para o seguidor basta seguir o passo-a-passo:
 - Fazer o download do diretório no formato .zip pelo GitHub
 - Extrair os arquivos para uma pasta
-- Abrir o diretório **seguidor_XXXX/sdl-code** por meio da extensão PlatformioIO no Visual Studio Code
+- Abrir o diretório **seguidor_----/sdl-code** por meio da extensão PlatformioIO no Visual Studio Code
 - Fazer o upload a partir do PlatformioIO para o Arduino Nano
 
 Obs.: Caso o upload não funcione, desconecte o módulo bluetooth do Seguidor e tente fazer o upload novamente.
