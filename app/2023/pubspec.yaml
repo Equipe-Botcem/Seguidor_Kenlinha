@@ -1,0 +1,32 @@
+name: controle
+description: A new Flutter project.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=2.19.3 <3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_bluetooth_serial: ^0.4.0
+  flutter_joystick: ^0.0.3
+  flutter_launcher_icons: ^0.13.0
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  loading_icon_button: ^0.0.3
+  path_provider: ^2.0.14
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+
+flutter_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "logo.jpg"
+  min_sdk_android: 21 # android min sdk min:16, default 21
