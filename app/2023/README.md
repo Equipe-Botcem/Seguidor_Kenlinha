@@ -1,3 +1,2 @@
-# controle
-
-A new Flutter project.
+# Código fonte do controle do seguidor - Flutter
+- Em desenvolvimento...
