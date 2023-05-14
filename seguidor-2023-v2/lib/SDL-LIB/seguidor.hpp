@@ -35,6 +35,7 @@ class Seguidor_de_Linha
         static sensores_frontais sns_frontais;
         static sensor sensor_chegada;
         static sensor sensor_mapa;
+        static bool ler_sensores_sem_pausa;
 
         unsigned long TMP_calib = 15;
         unsigned long tempo = TMP_calib;

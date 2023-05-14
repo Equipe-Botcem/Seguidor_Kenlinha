@@ -44,6 +44,10 @@ void Seguidor_de_Linha::sensor_calib(int pos){
 }
 void Seguidor_de_Linha::calibracao()
 {
+	//iniciando interrupcao sem pausa
+	ler_sensores_sem_pausa = true;
+	ADCSRA |= (1 << ADSC);
+
 	Serial.println("Calibrando sensores frontais");
 	sensor_calib(0);
 
@@ -61,5 +65,6 @@ void Seguidor_de_Linha::calibracao()
 	set_direcao('B');
 	set_velocidade(0,0);
 	set_direcao('F');
+	ler_sensores_sem_pausa = false;
 
 }

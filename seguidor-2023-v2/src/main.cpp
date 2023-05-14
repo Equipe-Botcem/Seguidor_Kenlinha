@@ -12,6 +12,7 @@ const unsigned char PS_128 = (1 << ADPS2) | (1 << ADPS1) | (1 << ADPS0);
 sensores_frontais Seguidor_de_Linha::sns_frontais;
 sensor Seguidor_de_Linha::sensor_chegada;
 sensor Seguidor_de_Linha::sensor_mapa;
+bool Seguidor_de_Linha::ler_sensores_sem_pausa = false;
 Seguidor_de_Linha CEMLinha = Seguidor_de_Linha();
 void setup() {
 
@@ -25,9 +26,9 @@ void setup() {
 	Serial.println(ADCSRA);
 	tmp_mili = millis();
 	
-	//iniciando conversao adc
+	//setando para comecar no sensor 0
 	ADMUX = (ADMUX & 0xF0) | (cont_sns);
-	ADCSRA |= (1 << ADSC);
+	ADCSRA |= (0 << ADSC);
 }
 
 ISR(ADC_vect) {
@@ -44,7 +45,9 @@ ISR(ADC_vect) {
 	cont_sns++;
 	if(cont_sns > 7){
 		cont_sns = 0;
-		ADCSRA |= (0 << ADSC);
+		ADMUX = (ADMUX & 0xF0) | (cont_sns);
+		if(Seguidor_de_Linha::ler_sensores_sem_pausa == false) ADCSRA |= (0 << ADSC);
+		else ADCSRA |= (1 << ADSC);
 	}
 	else{
 		ADMUX = (ADMUX & 0xF0) | (cont_sns); // Switch to A<number>

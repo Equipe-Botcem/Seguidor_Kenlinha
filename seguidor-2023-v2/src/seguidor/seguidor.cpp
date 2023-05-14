@@ -36,7 +36,7 @@ float Seguidor_de_Linha::seguir_linha_final(){
 	float erro = sns_frontais.erro_digital();
 	if (abs(erro) > 3) erro = erro/abs(erro) * 3;
 	float v_min = vel_max - 10;
-	Controlador.corrigir_trajeto(erro,vel_max,vel_min,&motor_dir, &motor_esq);
+	Controlador.corrigir_trajeto(erro,vel_max,v_min,&motor_dir, &motor_esq);
 	return erro;
 }
 char Seguidor_de_Linha::get_modo(){
