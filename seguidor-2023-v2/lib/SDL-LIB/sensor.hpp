@@ -17,6 +17,8 @@ public:
     int get_min_leitura();
     int get_pen_leitura();
     int get_ult_leitura();
+    int get_pin();
+    float calc_limite();
     void reset();
     sensor();
 };
