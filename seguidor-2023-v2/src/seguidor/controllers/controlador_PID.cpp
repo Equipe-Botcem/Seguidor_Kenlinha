@@ -28,17 +28,20 @@ float controlador_PID::get_correcao(float erro){
 		_kd = LKd;
 	}
 
-	if(abs(erro - erro_antigo) > 5){
+	/*if(abs(erro - erro_antigo) > 5){
 		erro_D = erro - erro_antigo;
 	}
 	else{
 		erro_D = 0;
-	}
+	}*/
+	erro_D = erro - erro_antigo;
 	if(abs(erro) <= 1){
 		erro_P = 0;
 		
-
-		erro_I += erro;
+		if(millis() - tempo_acumulo >= 100) {
+			erro_I += erro;
+			tempo_acumulo = millis();
+		}
 		if(erro == 0) erro_I = 0;
 		if		(erro_I > 50) 	erro_I = 50;
 		else if	(erro_I < -50) 	erro_I = -50;
@@ -48,7 +51,7 @@ float controlador_PID::get_correcao(float erro){
 		erro_I = 0;
 	}
 	erro_antigo = erro;
-	return ((_kp * erro_P) + (_ki * erro_I) + (_kd * erro_D)) *100;
+	return ((_kp * erro_P) + (_ki * erro_I) + (_kd * erro_D));
 }
 
 void controlador_PID::reset(){

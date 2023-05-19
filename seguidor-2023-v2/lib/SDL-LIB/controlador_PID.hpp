@@ -5,20 +5,21 @@
 class controlador_PID
 {
 private:
-    float Kp = 0.220;
-    float Ki = 0.130;
-    float Kd = 0.500;
+    float Kp = 22;
+    float Ki = 13;
+    float Kd = 50;
 
     float erro_P = 0;
     float erro_I = 0;
     float erro_D = 0;
 
     float erro_antigo = 0;
+    unsigned long tempo_acumulo = 0;
 
     //Mapeamento
-    float LKp = 0.150;
-    float LKi = 0.130;
-    float LKd = 0.500;
+    float LKp = 15;
+    float LKi = 13;
+    float LKd = 50;
 
     const static int T_mapa = 40;
     int secao_atual = 0;

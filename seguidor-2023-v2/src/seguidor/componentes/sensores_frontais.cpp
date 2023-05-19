@@ -29,6 +29,8 @@ int sensores_frontais::get_N_sns(){
 
 void sensores_frontais::ler_sensor(int n){
     leituras[n] = sensores[n].ler();
+    max_leituras[n] = sensores[n].get_max_leitura();
+    min_leituras[n] = sensores[n].get_min_leitura();
 }
 
 

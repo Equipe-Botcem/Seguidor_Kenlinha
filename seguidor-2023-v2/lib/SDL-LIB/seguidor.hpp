@@ -15,7 +15,7 @@ class Seguidor_de_Linha
 
         char modo = 'N';
         float vel_max = 255;
-        float vel_min = -50;
+        float vel_min = -250;
 
         //Parametros de calibracao
         float MAX_PRETO_CHEGADA = 100;

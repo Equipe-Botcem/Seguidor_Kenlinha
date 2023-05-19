@@ -7,16 +7,18 @@ void Seguidor_de_Linha::sensor_calib(int pos){
 	// pos = 1: sensores laterais
 	if (pos == 0){
 		sns_frontais.reset();
-		for (unsigned j = 0; j <= 10000; j++);
+		delay(500);
 
 		set_direcao('T');
 		set_velocidade(vel_calib,vel_calib);
-		while (!sns_frontais.comp_max_value(2 * sns_frontais.get_min_media()));
+		while (!sns_frontais.comp_max_value(2 * sns_frontais.get_min_media())){
+			delay(1);
+		}
 
 		set_direcao('B');
 		set_velocidade(0,0);
 
-		for (unsigned j = 0; j <= 10000; j++);
+		delay(500);
 
 		for( int j = 0; j < sns_frontais.get_N_sns(); j++){
 			sns_frontais.limites[j] = sns_frontais.sensores[j].calc_limite();
@@ -28,14 +30,20 @@ void Seguidor_de_Linha::sensor_calib(int pos){
 	}else if(pos == 1){
 		sensor_chegada.reset();
 		sensor_mapa.reset();
+
+		delay(500);
 		set_direcao('F');
 		set_velocidade(vel_calib,vel_calib);
-		while(sensor_chegada.get_max_leitura() < 2 * sensor_chegada.get_min_leitura());
-		while(sensor_mapa.get_max_leitura() < 2 * sensor_mapa.get_min_leitura());
+		while(sensor_chegada.get_max_leitura() < 2 * sensor_chegada.get_min_leitura()){
+			delay(1);
+		}
+		while(sensor_mapa.get_max_leitura() < 2 * sensor_mapa.get_min_leitura()){
+			delay(1);
+		}
 		set_direcao('B');
 		set_velocidade(0,0);
 		
-		for (unsigned int i = 0; i < 10000; i++);
+		delay(500);
 
 		MAX_PRETO_CHEGADA = sensor_chegada.calc_limite();
 		MAX_PRETO_MAPA = sensor_mapa.calc_limite();
@@ -61,7 +69,7 @@ void Seguidor_de_Linha::calibracao()
 	set_direcao('E');
 	set_velocidade(vel_calib,vel_calib);
 
-	while (sns_frontais.leituras[2] < sns_frontais.limites[2]){}
+	while (sns_frontais.leituras[2] < sns_frontais.limites[2]){delay(1);}
 	set_direcao('B');
 	set_velocidade(0,0);
 	set_direcao('F');

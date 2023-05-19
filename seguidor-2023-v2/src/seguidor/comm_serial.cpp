@@ -66,9 +66,9 @@ void Seguidor_de_Linha::send_const(){
 	
 	String msg = "T: Constantes: ";
 	Serial.print(msg);
-	Serial.print(Kp*1000); 		Serial.print("|");
-	Serial.print(Ki*1000); 		Serial.print("|");
-	Serial.print(Kd*1000); 		Serial.print("|");
+	Serial.print(Kp); 			Serial.print("|");
+	Serial.print(Ki); 			Serial.print("|");
+	Serial.print(Kd); 			Serial.print("|");
 	Serial.print(0); 			Serial.print("|");
 	Serial.print(0); 			Serial.print("|");
 	Serial.print(vel_min);  	Serial.print("|");
@@ -105,7 +105,7 @@ void Seguidor_de_Linha::set_CONSTS(String valores)
 	}
 	dados[cont] = dados_texto[cont].toDouble();
 	
-	Controlador.set_const(dados[0] / 1000, dados[1] / 1000, dados[2] / 1000); //KP,KI,KD
+	Controlador.set_const(dados[0], dados[1], dados[2]); //KP,KI,KD
 	vel_min = dados[5];
 	vel_max = dados[6];
 	TMP_calib = dados[7];
@@ -139,22 +139,24 @@ void Seguidor_de_Linha::run()
 
 
 void Seguidor_de_Linha::teste_frontal(){
-	for (unsigned j = 0; j <= 1000; j++)
-	{
-		sns_frontais.ler_todos();
-	}
 	double soma = 0;
+	
+	for(int i = 0; i < 6; i++){
+        sns_frontais.leituras[i] = -1;
+	}
+	ler_sensores_sem_pausa = true;
+	ADCSRA |= (1 << ADSC);
+	delay(50);
+	ler_sensores_sem_pausa = false;
 	for (unsigned int i = 0; i < 6; i++)
 	{
 		soma += sns_frontais.leituras[i];
-		Serial.println(sns_frontais.leituras[i]);
+		Serial.println((String)i + " - " + (String)sns_frontais.leituras[i]);
 	}
 
 	Serial.print("Resultado teste frontal: ");
 	Serial.println(soma/6);
 	Serial.println("Max preto: " + (String)MAX_PRETO);
-	Serial.println(sns_frontais.get_max_media());
-	Serial.println(sns_frontais.get_min_media());
 }
 void Seguidor_de_Linha::teste_lateral(){
 	Serial.println("Chegada: " + (String)sensor_chegada.ler());

@@ -22,7 +22,7 @@ void setup() {
 	ADCSRA |= (1 << ADIE);
 	sei();
 
-	Serial.begin(115200);
+	Serial.begin(9600);
 	Serial.println(ADCSRA);
 	tmp_mili = millis();
 	
@@ -79,8 +79,8 @@ void loop()
 	}
 	if(millis() - tmp_mili > 1000){
 		tmp_mili = millis();
-		Serial.println((int)(cont/8));
-		Serial.println(cont2);
+		//Serial.println((int)(cont/8));
+		//Serial.println(cont2);
 		/*Serial.print((String)Seguidor_de_Linha::sns_frontais.sensores[0].get_pin() + " - "); Serial.println(Seguidor_de_Linha::sns_frontais.leituras[0]);
 		Serial.print((String)Seguidor_de_Linha::sns_frontais.sensores[1].get_pin() + " - ");Serial.println(Seguidor_de_Linha::sns_frontais.leituras[1]);
 		Serial.print((String)Seguidor_de_Linha::sns_frontais.sensores[2].get_pin() + " - ");Serial.println(Seguidor_de_Linha::sns_frontais.leituras[2]);
