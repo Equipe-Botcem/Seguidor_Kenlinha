@@ -3,7 +3,7 @@
 void controlador_PID::corrigir_trajeto(float erro,int vel_max, int vel_min, motor * m_dir, motor * m_esq)
 {
 	float PID = get_correcao(erro);
-	if(abs(erro) >= 55) vel_min = -250;
+	if(abs(erro) >= 30) vel_min = -250;
 	if(PID >= 0){
 		float vel_corrigida = vel_max - PID;
 		if(vel_corrigida <= vel_min) vel_corrigida = vel_min;
@@ -37,14 +37,14 @@ float controlador_PID::get_correcao(float erro){
 	erro_D = erro - erro_antigo;
 	if(abs(erro) <= 1){
 		erro_P = 0;
-		
-		if(millis() - tempo_acumulo >= 100) {
+		if(abs(erro) <= 0.03) erro_I = 0;
+		else if(millis() - tempo_acumulo >= 100) {
 			erro_I += erro;
 			tempo_acumulo = millis();
+			if		(erro_I > 50) 	erro_I = 50;
+			else if	(erro_I < -50) 	erro_I = -50;
 		}
-		if(erro == 0) erro_I = 0;
-		if		(erro_I > 50) 	erro_I = 50;
-		else if	(erro_I < -50) 	erro_I = -50;
+		
 	}
 	else{
 		erro_P = erro;

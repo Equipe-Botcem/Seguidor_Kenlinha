@@ -14,9 +14,12 @@ Em desenvolvimento...
 
 ## Correções:
 - C1: O tamanho do vetor dos erros foi reduzido.
+- C2: Mudanças na metodologia de aplicação do PID
 
 ## Adições:
 - A1: Obtenção dos valores analógicos por meio de interrupção.
+- A2: Adição do calculo do erro analógico
+
 
 ## Resultado:
 - Em testes...

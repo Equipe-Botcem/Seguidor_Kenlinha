@@ -1,9 +1,12 @@
 #include "seguidor.hpp"
 
+//var para testes
 unsigned long cont = 0;
 unsigned long cont2 = 0;
-int cont_sns = 0;
 unsigned long tmp_mili;
+//fim
+
+int cont_sns = 0;
 const unsigned char PS_16 = (1 << ADPS2);
 const unsigned char PS_32 = (1 << ADPS2) | (1 << ADPS0);
 const unsigned char PS_64 = (1 << ADPS2) | (1 << ADPS1);
@@ -15,7 +18,7 @@ sensor Seguidor_de_Linha::sensor_mapa;
 bool Seguidor_de_Linha::ler_sensores_sem_pausa = false;
 Seguidor_de_Linha CEMLinha = Seguidor_de_Linha();
 void setup() {
-
+	
 	ADCSRA &= ~PS_128; 
 	ADCSRA |= PS_16; // 16 prescaler Nao recomendado
 	//interrupcao
@@ -27,8 +30,10 @@ void setup() {
 	tmp_mili = millis();
 	
 	//setando para comecar no sensor 0
-	ADMUX = (ADMUX & 0xF0) | (cont_sns);
+	ADMUX = (1 << 6) | ((CEMLinha.getpin(cont_sns) - 14) & 0x07);
 	ADCSRA |= (0 << ADSC);
+
+	
 }
 
 ISR(ADC_vect) {
@@ -42,24 +47,28 @@ ISR(ADC_vect) {
 	else{
 		Seguidor_de_Linha::sns_frontais.ler_sensor(5 - cont_sns);
 	}
+	
 	cont_sns++;
 	if(cont_sns > 7){
 		cont_sns = 0;
-		ADMUX = (ADMUX & 0xF0) | (cont_sns);
+		ADMUX = (1 << 6) | ((CEMLinha.getpin(cont_sns) - 14) & 0x07);
 		if(Seguidor_de_Linha::ler_sensores_sem_pausa == false) ADCSRA |= (0 << ADSC);
 		else ADCSRA |= (1 << ADSC);
 	}
 	else{
-		ADMUX = (ADMUX & 0xF0) | (cont_sns); // Switch to A<number>
+		ADMUX = (1 << 6) | ((CEMLinha.getpin(cont_sns) - 14) & 0x07); // Switch to A<number>
 		// Start the next ADC conversion
 		ADCSRA |= (1 << ADSC);
 		
 	}
 	cont ++;
 }
+//controlador_PID control_teste;
 void loop()
 {
-	
+	/*volatile float erro_anl = Seguidor_de_Linha::sns_frontais.erro_analogico();
+	volatile float erro_dig = Seguidor_de_Linha::sns_frontais.erro_digital();
+	volatile float corr = control_teste.get_correcao(erro_anl);*/
 	
 	if (CEMLinha.Estado_corrida == true)
 	{
@@ -77,22 +86,18 @@ void loop()
 		}
 		
 	}
-	if(millis() - tmp_mili > 1000){
+	/* Teste 
+	if(millis() - tmp_mili > 100){
 		tmp_mili = millis();
 		//Serial.println((int)(cont/8));
 		//Serial.println(cont2);
-		/*Serial.print((String)Seguidor_de_Linha::sns_frontais.sensores[0].get_pin() + " - "); Serial.println(Seguidor_de_Linha::sns_frontais.leituras[0]);
-		Serial.print((String)Seguidor_de_Linha::sns_frontais.sensores[1].get_pin() + " - ");Serial.println(Seguidor_de_Linha::sns_frontais.leituras[1]);
-		Serial.print((String)Seguidor_de_Linha::sns_frontais.sensores[2].get_pin() + " - ");Serial.println(Seguidor_de_Linha::sns_frontais.leituras[2]);
-		Serial.print((String)Seguidor_de_Linha::sns_frontais.sensores[3].get_pin() + " - ");Serial.println(Seguidor_de_Linha::sns_frontais.leituras[3]);
-		Serial.print((String)Seguidor_de_Linha::sns_frontais.sensores[4].get_pin() + " - ");Serial.println(Seguidor_de_Linha::sns_frontais.leituras[4]);
-		Serial.print((String)Seguidor_de_Linha::sns_frontais.sensores[5].get_pin() + " - ");Serial.println(Seguidor_de_Linha::sns_frontais.leituras[5]);
-		*/
+		//CEMLinha.teste_frontal();	
+		Serial.print("Analogico: " + (String)corr+ " - Erro: ");
+		Serial.println(erro_anl, 4);
 		cont = 0;
 		cont2 = 0;
-		
 	}
-	cont2++;
+	cont2++;*/
 }
 void serialEvent(){
 	CEMLinha.comunica_serial();

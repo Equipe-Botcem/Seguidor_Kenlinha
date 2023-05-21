@@ -75,10 +75,11 @@ public:
     sensor sensores[6];
     int leituras[6];
 
-    int limites[6] = {200};
+    int limites[6] = {100,100,100,100,100,100};
     
 
     float erro_digital();
+	float erro_analogico();
     int max_leituras[6]= {0};
     int min_leituras[6] ={1023};
 	int get_N_sns();
@@ -92,7 +93,7 @@ public:
     double get_max_media();
     double get_min_media();
     void reset();
-    bool comp_max_value(int valor);
+    bool comp_max_value(int valor); 
 
 
 };

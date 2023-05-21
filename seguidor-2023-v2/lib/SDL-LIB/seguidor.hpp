@@ -28,10 +28,11 @@ class Seguidor_de_Linha
         unsigned long secao_time = 0;
         char direcao_atual = 'F';
 
-        int pinos[14] = {A5,A4,A3,A2,A1,A0,
-                        A6, A7, 6, 10, 9, 5, 7, 8};
+        int pinos[14] = {A6,A5,A3,A4,A2,A0,
+                        A1, A7, 6, 10, 9, 5, 7, 8};
                         
     public:
+        
         static sensores_frontais sns_frontais;
         static sensor sensor_chegada;
         static sensor sensor_mapa;
@@ -44,7 +45,7 @@ class Seguidor_de_Linha
         Seguidor_de_Linha();
 
         char get_modo();
-
+        int getpin(int pin);
         float seguir_linha();
         float seguir_linha_final();
 

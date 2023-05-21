@@ -20,11 +20,15 @@ Seguidor_de_Linha::Seguidor_de_Linha()
 }
 //funcao para seguir a linha
 float Seguidor_de_Linha::seguir_linha(){
-	float erro = sns_frontais.erro_digital();
+	//float erro = sns_frontais.erro_digital();
+	float erro = sns_frontais.erro_analogico();
 	if(abs(erro) < 8){
 		//checar_chegada(); // 1 if em media
 	}
-	else if(erro == 111111) erro = 0;
+	else if(erro == 111111){
+		encru_time = millis();
+		erro = 0;
+	}
 	//mapeamento
 	checar_secao();
 	ADCSRA |= (1 << ADSC);
@@ -33,11 +37,15 @@ float Seguidor_de_Linha::seguir_linha(){
 }
 
 float Seguidor_de_Linha::seguir_linha_final(){
-	float erro = sns_frontais.erro_digital();
+	//float erro = sns_frontais.erro_digital();
+	float erro = sns_frontais.erro_analogico();
 	if (abs(erro) > 3) erro = erro/abs(erro) * 3;
 	float v_min = vel_max - 10;
 	Controlador.corrigir_trajeto(erro,vel_max,v_min,&motor_dir, &motor_esq);
 	return erro;
+}
+int Seguidor_de_Linha::getpin(int pin){
+	return pinos[pin];
 }
 char Seguidor_de_Linha::get_modo(){
 	return modo;

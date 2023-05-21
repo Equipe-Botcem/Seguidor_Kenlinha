@@ -23,6 +23,32 @@ float sensores_frontais::erro_digital(){
     erro_antigo = erro;
 	return erro;
 }
+
+float sensores_frontais::erro_analogico(){
+    float erro = 0;
+    float soma = 0;
+
+    float valor = 0;
+	for(int i = 0; i < 3; i++){
+        valor = sensores[i].get_ult_leitura_percent();
+        erro += - valor * ((2-i)*8 + 4.6); //distancia dos sensores ao centro da pcb vermelha
+        soma += valor;
+
+        valor = sensores[i+3].get_ult_leitura_percent();
+        erro += valor * ((i)*8 + 4.6);
+        soma += valor;
+    }
+    if(soma == 0 && (erro_antigo != 0)) erro = 30 * abs(erro_antigo)/erro_antigo;
+    else if(soma > 5) erro = 111111;
+    else if(soma != 0){
+        erro /= soma;
+        erro = atan(erro/125);
+        erro *= 57.29578;
+    }
+    erro_antigo = erro;
+	return erro;
+}
+
 int sensores_frontais::get_N_sns(){
 	return N_sns;
 }
@@ -31,6 +57,7 @@ void sensores_frontais::ler_sensor(int n){
     leituras[n] = sensores[n].ler();
     max_leituras[n] = sensores[n].get_max_leitura();
     min_leituras[n] = sensores[n].get_min_leitura();
+    
 }
 
 
