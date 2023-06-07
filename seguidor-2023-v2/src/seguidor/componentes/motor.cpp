@@ -15,7 +15,7 @@ void motor::set_direcao(char dir){
         digitalWrite(pin_DIR1, LOW);
 	    digitalWrite(pin_DIR2, LOW);
         break;
-    case 'B':
+    case 'B': //Travar
         digitalWrite(pin_DIR1, HIGH);
 	    digitalWrite(pin_DIR2, HIGH);
         break;

@@ -11,16 +11,16 @@ Seguidor_de_Linha::Seguidor_de_Linha()
     for(int i = 8; i < 14; i++){
         pinMode(pinos[i], OUTPUT);
     }
-	motor_dir.set_pins(pinos[8] , pinos[9] , pinos[10]);
-	motor_esq.set_pins(pinos[11], pinos[12], pinos[13]);
 	sns_frontais.set_pinos(pinos);
 	sensor_chegada.set_pin(pinos[6]);
 	sensor_mapa.set_pin(pinos[7]);
+	motor_dir.set_pins(pinos[8] , pinos[9] , pinos[10]);
+	motor_esq.set_pins(pinos[11], pinos[12], pinos[13]);
+	
 	set_direcao('F');
 }
 //funcao para seguir a linha
 float Seguidor_de_Linha::seguir_linha(){
-	//float erro = sns_frontais.erro_digital();
 	float erro = sns_frontais.erro_analogico();
 	if(abs(erro) < 8){
 		//checar_chegada(); // 1 if em media
@@ -30,18 +30,16 @@ float Seguidor_de_Linha::seguir_linha(){
 		erro = 0;
 	}
 	//mapeamento
-	checar_secao();
+	//checar_secao();
 	ADCSRA |= (1 << ADSC);
-	Controlador.corrigir_trajeto(erro,vel_max,vel_min,&motor_dir, &motor_esq);
+	Controlador.corrigir_trajeto(erro,&motor_dir, &motor_esq);
 	return erro;
 }
 
 float Seguidor_de_Linha::seguir_linha_final(){
-	//float erro = sns_frontais.erro_digital();
 	float erro = sns_frontais.erro_analogico();
-	if (abs(erro) > 3) erro = erro/abs(erro) * 3;
-	float v_min = vel_max - 10;
-	Controlador.corrigir_trajeto(erro,vel_max,v_min,&motor_dir, &motor_esq);
+	ADCSRA |= (1 << ADSC);
+	Controlador.corrigir_trajeto(erro,&motor_dir, &motor_esq);
 	return erro;
 }
 int Seguidor_de_Linha::getpin(int pin){

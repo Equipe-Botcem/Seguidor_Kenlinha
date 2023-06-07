@@ -14,8 +14,6 @@ class Seguidor_de_Linha
         motor motor_esq;
 
         char modo = 'N';
-        float vel_max = 255;
-        float vel_min = -250;
 
         //Parametros de calibracao
         float MAX_PRETO_CHEGADA = 100;
@@ -33,10 +31,10 @@ class Seguidor_de_Linha
                         
     public:
         
-        static sensores_frontais sns_frontais;
-        static sensor sensor_chegada;
-        static sensor sensor_mapa;
-        static bool ler_sensores_sem_pausa;
+        sensores_frontais sns_frontais;
+        sensor sensor_chegada;
+        sensor sensor_mapa;
+        bool ler_sensores_sem_pausa = false;
 
         unsigned long TMP_calib = 15;
         unsigned long tempo = TMP_calib;
@@ -57,10 +55,10 @@ class Seguidor_de_Linha
         void ControlCMD(String command);
         void run();
         void stop();
-        void comunica_serial();
-        void send_const();
-        void send_erros();
-        void set_CONSTS(String valores);
+        
+        void send_Consts();
+        void set_Consts(String valores);
+
         void teste_frontal();
         void teste_lateral();
         void teste_curva();

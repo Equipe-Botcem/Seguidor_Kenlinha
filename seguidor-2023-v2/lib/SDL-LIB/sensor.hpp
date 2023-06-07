@@ -9,17 +9,20 @@ private:
     int valor_max_lido;
     int valor_min_lido;
 public:
-    void set_pin(int pin);
+    sensor();
+
+    int calc_limite(int fator);
     int ler();
     int ler_fast();
+    void reset();
+
     int get_max_leitura();
     int get_min_leitura();
     int get_ult_leitura();
-    float get_ult_leitura_percent();
     int get_pin();
-    int calc_limite();
-    void reset();
-    sensor();
+    float get_ult_leitura_percent();
+
+    void set_pin(int pin);
 };
 #endif
 

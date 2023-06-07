@@ -4,17 +4,69 @@
 #define CTRLR_PID_H
 class controlador_PID
 {
+/*KI para 1 grau*/
+/*
+KP: 15
+KI: 0.106 
+KD: 0
+
+VEL_MAX = -VEL_MIN = 205
+*/
+/*
+KP: 13
+KI: 0.04
+KD: 0
+
+VEL_MAX = -VEL_MIN = 205
+*/
+/*
+KP: 12
+KI: 0.007
+KD: 0
+
+VEL_MAX = -VEL_MIN = 205
+*/
+/*
+KP: 12
+KI: 0.01
+KD: 0
+
+VEL_MAX = -VEL_MIN = 205
+*/
+/*
+KP: 14
+KI: 0.268
+KD: 0
+
+VEL_MAX = -VEL_MIN = 255
+*/
+
+/*KI grau 2
+KP: 14
+KI: 0.03
+KD: 0
+
+VEL_MAX = -VEL_MIN = 235
+
+*/
 private:
-    float Kp = 22;
-    float Ki = 13;
-    float Kd = 50;
+    int vel_max = 255;
+    int vel_min = -255;
+    float Kp = 15;
+    float Ki = 0.05;
+    float Kd = 0;
 
     float erro_P = 0;
-    float erro_I = 0;
-    float erro_D = 0;
 
+    float erro_I = 0;
+    float erro_antigo_I = 0;
+    unsigned long tempo_acumulo = 10;
+    unsigned long tempo_ult_atualizacao = 0;
+
+    float erro_D = 0;
     float erro_antigo = 0;
-    unsigned long tempo_acumulo = 0;
+    
+    float corr_old = 0;
 
     //Mapeamento
     float LKp = 15;
@@ -27,8 +79,10 @@ private:
     bool seguir_mapa = false;
     int mapa[T_mapa] = {0};
 public:
-    void corrigir_trajeto(float erro,int vel_max, int vel_min, motor * m_dir, motor * m_esq);
+    void corrigir_trajeto(float erro, motor * m_dir, motor * m_esq);
     void prox_secao();
+
+    void set_vel(int v_max, int v_min);
 
     void set_const(float _kp, float _ki, float _kd);
     void set_const_L(float _kp, float _ki, float _kd);
@@ -39,6 +93,7 @@ public:
     void get_const(float * consts);
     void get_const_L(float * consts);
     void get_mapa(int * _mapa);
+    void get_vel(int * vetor);
     
     bool get_estado_mapa();
     int get_secao();

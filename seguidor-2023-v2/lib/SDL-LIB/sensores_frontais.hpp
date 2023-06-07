@@ -4,7 +4,7 @@
 class sensores_frontais
 {
 private:
-    float casos[59] = {	
+    /*float casos[59] = {	
 		55, //0
 		-11.39, //1
 		0, //2
@@ -65,37 +65,31 @@ private:
 		9, //57
 		0 //58
 	};
-    
-	const int N_sns = 6;
+    */
+	//
+	const static int N_sns = 6;
     float erro_antigo = 0;
+	float erro_antigo_alto = 0;
 public:
 
+	sensor sensores[N_sns];
+    int limites[N_sns] = {100,100,100,100,100,100};
+
     sensores_frontais();
-
-    sensor sensores[6];
-    int leituras[6];
-
-    int limites[6] = {100,100,100,100,100,100};
-    
+	void set_pinos(int pins[]);
+	void reset();
 
     float erro_digital();
 	float erro_analogico();
-    int max_leituras[6]= {0};
-    int min_leituras[6] ={1023};
+    
 	int get_N_sns();
-    void set_pinos(int pins[]);
+	float get_media();
+    float get_max_media();
+    float get_min_media();
 
     void ler_sensor(int n);
-    void ler_todos();
-    void ler_todos_fast();
-    bool leituras_max_dif(double fator);
-    double get_media();
-    double get_max_media();
-    double get_min_media();
-    void reset();
+    
     bool comp_max_value(int valor); 
-
-
 };
 #endif
 

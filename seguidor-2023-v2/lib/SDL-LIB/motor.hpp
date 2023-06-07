@@ -10,6 +10,7 @@ private:
     int velocidade;
 public:
     motor();
+    
     void set_pins(int p_pwm, int p_dir1, int p_dir2);
     void set_direcao(char dir);
     void set_velocidade(int vel);

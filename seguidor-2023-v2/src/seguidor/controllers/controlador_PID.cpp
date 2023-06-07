@@ -1,54 +1,64 @@
 #include <controlador_PID.hpp>
 
-void controlador_PID::corrigir_trajeto(float erro,int vel_max, int vel_min, motor * m_dir, motor * m_esq)
+void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
 {
 	float PID = get_correcao(erro);
-	if(abs(erro) >= 30) vel_min = -250;
+	int v_max = vel_max;
+	//if(abs(erro) < 1) v_max = (1 - abs(erro)/2) * vel_max;
 	if(PID >= 0){
-		float vel_corrigida = vel_max - PID;
-		if(vel_corrigida <= vel_min) vel_corrigida = vel_min;
+		float vel_corrigida = v_max - PID;
+		if(vel_corrigida < vel_min) vel_corrigida = vel_min;
 		
         (*m_dir).set_velocidade_fast((int)vel_corrigida);
-        (*m_esq).set_velocidade_fast(vel_max);
+        (*m_esq).set_velocidade_fast(v_max);
 	}
 	else{
-		float vel_corrigida = vel_max + PID;
-		if(vel_corrigida <= vel_min) vel_corrigida = vel_min;
+		float vel_corrigida = v_max + PID;
+		if(vel_corrigida < vel_min) vel_corrigida = vel_min;
 
-		(*m_dir).set_velocidade_fast(vel_max);
+		(*m_dir).set_velocidade_fast(v_max);
         (*m_esq).set_velocidade_fast((int)vel_corrigida);
 	}
 }
 
 float controlador_PID::get_correcao(float erro){
     float _kp = Kp, _kd = Kd,_ki = Ki;
-	if(seguir_mapa && mapa[secao_atual]){
+	/*if(seguir_mapa && mapa[secao_atual]){
 		_kp = LKp;
 		_ki = LKi;
 		_kd = LKd;
-	}
-
-	/*if(abs(erro - erro_antigo) > 5){
-		erro_D = erro - erro_antigo;
-	}
-	else{
-		erro_D = 0;
 	}*/
-	erro_D = erro - erro_antigo;
+	
 	if(abs(erro) <= 1){
-		erro_P = 0;
-		if(abs(erro) <= 0.03) erro_I = 0;
-		else if(millis() - tempo_acumulo >= 100) {
-			erro_I += erro;
-			tempo_acumulo = millis();
-			if		(erro_I > 50) 	erro_I = 50;
-			else if	(erro_I < -50) 	erro_I = -50;
+		
+
+		//KI 1 grau
+		
+		if(abs(erro) <= 0.005 || erro*erro_I < 0) {
+			erro_I = 0;
+			erro_antigo_I = 0;
 		}
+		else if(millis() - tempo_ult_atualizacao >= 2) {
+			float variacao_erro = abs(erro) - abs(erro_antigo_I);
+			if((variacao_erro >= 0) || erro*erro_antigo_I < 0){
+				erro_I += variacao_erro*(erro >= 0 ? 500:-500);
+				tempo_ult_atualizacao = millis();
+			}
+			else if(variacao_erro <= (-0.015*abs(erro))){
+				erro_I -= variacao_erro*(erro >= 0 ? 500:-500);
+				tempo_ult_atualizacao = millis();
+			}
+			erro_antigo_I = erro;
+		}
+		
 		
 	}
 	else{
-		erro_P = erro;
+		
+		erro_P = erro * abs(erro)/3;
+		erro_antigo_I = erro;
 		erro_I = 0;
+		erro_D = erro - erro_antigo;
 	}
 	erro_antigo = erro;
 	return ((_kp * erro_P) + (_ki * erro_I) + (_kd * erro_D));
@@ -60,6 +70,16 @@ void controlador_PID::reset(){
     erro_P = 0;
 	erro_I = 0;
 	erro_D = 0;
+}
+
+void controlador_PID::set_vel(int v_max, int v_min){
+    vel_max = v_max;
+	vel_min = v_min;
+}
+
+void controlador_PID::get_vel(int * vetor){
+    vetor[0] = vel_max;
+	vetor[1] = vel_min;
 }
 
 void controlador_PID::set_const(float _kp, float _ki, float _kd){
@@ -113,3 +133,22 @@ int controlador_PID::get_controle_secao(){
 float controlador_PID::get_erro_antigo(){
     return erro_antigo;
 }
+
+/*KI 2 grau
+		if(abs(erro) <= 0.1 || erro*erro_I < 0) {
+			erro_I = 0;
+			erro_antigo_I = 0;
+		}
+		else if(millis() - tempo_ult_atualizacao >= 2) {
+			float variacao_erro = abs(erro) - abs(erro_antigo_I);
+			if((variacao_erro >= 0) || erro*erro_antigo_I < 0){
+				erro_I += variacao_erro*(erro >= 0 ? 500:-500);
+				tempo_ult_atualizacao = millis();
+			}
+			else if(variacao_erro <= (-0.001)){
+				erro_I -= variacao_erro*(erro >= 0 ? 500:-500);
+				tempo_ult_atualizacao = millis();
+			}
+			erro_antigo_I = erro;
+		}
+		erro_P = 0;*/

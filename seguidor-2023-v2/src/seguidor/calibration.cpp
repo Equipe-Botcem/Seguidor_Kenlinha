@@ -21,7 +21,7 @@ void Seguidor_de_Linha::sensor_calib(int pos){
 		delay(500);
 
 		for( int j = 0; j < sns_frontais.get_N_sns(); j++){
-			sns_frontais.limites[j] = sns_frontais.sensores[j].calc_limite();
+			sns_frontais.limites[j] = sns_frontais.sensores[j].calc_limite(2);
 		}
 		MAX_PRETO = (sns_frontais.get_max_media() - sns_frontais.get_min_media())/2 + sns_frontais.get_min_media();
 		set_direcao('F');
@@ -37,16 +37,16 @@ void Seguidor_de_Linha::sensor_calib(int pos){
 		while(sensor_chegada.get_max_leitura() < 2 * sensor_chegada.get_min_leitura()){
 			delay(1);
 		}
-		while(sensor_mapa.get_max_leitura() < 2 * sensor_mapa.get_min_leitura()){
+		/*while(sensor_mapa.get_max_leitura() < 2 * sensor_mapa.get_min_leitura()){
 			delay(1);
-		}
+		}*/
 		set_direcao('B');
 		set_velocidade(0,0);
 		
 		delay(500);
 
-		MAX_PRETO_CHEGADA = sensor_chegada.calc_limite();
-		MAX_PRETO_MAPA = sensor_mapa.calc_limite();
+		MAX_PRETO_CHEGADA = sensor_chegada.calc_limite(2);
+		//MAX_PRETO_MAPA = sensor_mapa.calc_limite();
 
 	}
 }
@@ -69,7 +69,7 @@ void Seguidor_de_Linha::calibracao()
 	set_direcao('E');
 	set_velocidade(vel_calib,vel_calib);
 
-	while (sns_frontais.leituras[2] < sns_frontais.limites[2]){delay(1);}
+	while (sns_frontais.sensores[2].get_ult_leitura() < sns_frontais.limites[2]){delay(1);}
 	set_direcao('B');
 	set_velocidade(0,0);
 	set_direcao('F');
