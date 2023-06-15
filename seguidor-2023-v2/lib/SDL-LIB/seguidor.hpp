@@ -4,6 +4,7 @@
 #include <sensor.hpp>
 #include <sensores_frontais.hpp>
 #include <controlador_PID.hpp>
+#include "SimpleKalmanFilter.h"
 #ifndef SDL_H
 #define SDL_H
 class Seguidor_de_Linha
@@ -13,6 +14,9 @@ class Seguidor_de_Linha
         motor motor_dir;
         motor motor_esq;
 
+        SimpleKalmanFilter Kalman = SimpleKalmanFilter(0.01,0.01,0.01);
+
+        unsigned long start_time = 0;
         char modo = 'N';
 
         //Parametros de calibracao
@@ -20,14 +24,16 @@ class Seguidor_de_Linha
         float MAX_PRETO_MAPA = 100;
         float MAX_PRETO = 100;
         int vel_calib = 130;
+
+        int estado_s_chegada = 0;
+        int estado_s_mapa = 0;
         //-------------------//
         int qnt_linhas = 2;
-        unsigned long encru_time = 0;
-        unsigned long secao_time = 0;
+        unsigned long curva_time = 0;
         char direcao_atual = 'F';
 
-        int pinos[14] = {A6,A5,A3,A4,A2,A0,
-                        A1, A7, 6, 10, 9, 5, 7, 8};
+        int pinos[14] = {A5,A4,A3,A2,A1,A0,
+                        A6, A7, 6, 9, 10, 5, 8, 7};
                         
     public:
         
@@ -35,6 +41,7 @@ class Seguidor_de_Linha
         sensor sensor_chegada;
         sensor sensor_mapa;
         bool ler_sensores_sem_pausa = false;
+        bool ler_sensores_fast = false;
 
         unsigned long TMP_calib = 15;
         unsigned long tempo = TMP_calib;
@@ -61,7 +68,6 @@ class Seguidor_de_Linha
 
         void teste_frontal();
         void teste_lateral();
-        void teste_curva();
         
         //calibracao
         void calibracao();

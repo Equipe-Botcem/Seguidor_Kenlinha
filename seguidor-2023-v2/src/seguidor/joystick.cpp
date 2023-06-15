@@ -3,50 +3,59 @@ void Seguidor_de_Linha::joystick_control(String cmd){
     if(Estado_corrida) return;
     modo = 'J';
 
-	String dados_texto[10];
-	double dados[10];
+	String dados_texto[4];
+	float dados[4];
 	bool novo_valor = false;
+    int cont_caracter = 0;
 	int cont = 0;
 	for(unsigned int i = 0; i < cmd.length(); i++){
 		if(isDigit(cmd[i]) || (cmd[i] == '.') || (cmd[i] == '-') || (cmd[i] == '+')){
-			dados_texto[cont] += cmd[i];
-			novo_valor = true;
+            if(cont_caracter < 4){
+                cont_caracter++;
+                dados_texto[cont] += cmd[i];
+                novo_valor = true;
+            }
 		}
 		else if(novo_valor){
+            cont_caracter = 0;
 			novo_valor = false;
 			dados[cont] = dados_texto[cont].toDouble();
 			cont++;
 		}
 	}
-	double x = dados[0], y = dados[1], raio = dados[2];
-
+    dados[cont] = dados_texto[cont].toDouble();
+	float x = dados[0], y = dados[1], raio = dados[2];
     if(x == 0 && (y == 0)){
         set_direcao('B');
         set_velocidade(0,0);
+        modo = 'B';
         return;
     }
     
-    int vel_max_joystick = 200;
-    double fat_drc = y/raio;
-    double fat_rot = x/raio;
+    int vel_max_joystick = 100;
+    float fat_drc = y/raio;
+    float fat_rot = x/raio;
 
-    int vel_drc = -fat_drc * vel_max_joystick;
-    int vel_rot = abs(fat_rot * vel_max_joystick);
-    if(fat_rot > 0.51){
-        set_direcao('D');
-        set_velocidade(vel_rot, vel_rot);
-        
+    int vel_drc = -fat_drc * vel_max_joystick + (-fat_drc > 0? 50:-50);
+    int vel_rot = -fat_rot * vel_max_joystick + (-fat_rot > 0? 50:-50);
+
+
+	set_direcao('F');
+    if(abs(fat_rot) < 0.1){
+        vel_drc +=(-fat_drc > 0? 50:-50);
+        set_velocidade(vel_drc, vel_drc);
     }
-	else if(fat_rot < -0.51){
-        set_direcao('E');
-        set_velocidade(vel_rot, vel_rot);
-        
+    else if(abs(fat_drc) < 0.1){
+        set_velocidade(vel_rot, -vel_rot);
+    }
+    else if(vel_rot > 0){
+        set_velocidade(vel_drc + vel_rot, vel_drc);
     }
     else{
-		set_direcao('F');
-        set_velocidade(vel_drc, vel_drc);
-        
+        set_velocidade(vel_drc, vel_drc -vel_rot);
     }
-    delay(50);
+    
+    
+    //delay(50);
 
 }

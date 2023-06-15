@@ -14,7 +14,7 @@ int sensor::ler(){
 }
 
 int sensor::ler_fast(){
-    ultima_leitura = 1023 - analogRead(pin_dado);
+    ultima_leitura = (3*(1023 - analogRead(pin_dado)) + ultima_leitura)/4;
     return ultima_leitura;
 }
 int sensor::calc_limite(int fator){

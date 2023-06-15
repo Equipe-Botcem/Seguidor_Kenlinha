@@ -21,16 +21,22 @@ Seguidor_de_Linha::Seguidor_de_Linha()
 }
 //funcao para seguir a linha
 float Seguidor_de_Linha::seguir_linha(){
+	//float erro = Kalman.updateEstimate(sns_frontais.erro_analogico());
 	float erro = sns_frontais.erro_analogico();
-	if(abs(erro) < 8){
-		//checar_chegada(); // 1 if em media
-	}
-	else if(erro == 111111){
-		encru_time = millis();
+
+	if(erro == 111111){
+		estado_s_chegada = 2;
+		estado_s_mapa = 2;
 		erro = 0;
 	}
-	//mapeamento
-	//checar_secao();
+	else if(abs(erro) < 3){
+		checar_chegada(); // 1 if em 
+		//checar_secao();
+	}
+	else{
+		//if(Controlador.get_controle_secao() == 1) Controlador.prox_secao();
+		curva_time = millis();
+	}
 	ADCSRA |= (1 << ADSC);
 	Controlador.corrigir_trajeto(erro,&motor_dir, &motor_esq);
 	return erro;
@@ -67,8 +73,6 @@ void Seguidor_de_Linha::set_direcao(char direcao = 'F'){
         break;
     }
 	direcao_atual = direcao;
-	if(direcao == 'P') modo = 'P';
-	else if(direcao == 'F') modo = 'N';
 }
 
 void Seguidor_de_Linha::set_velocidade(int vel_dir, int vel_esq){
@@ -84,30 +88,35 @@ void Seguidor_de_Linha::set_velocidade_fast(int vel_dir, int vel_esq){
 
 void Seguidor_de_Linha::checar_chegada()
 {
-	if (sensor_chegada.get_ult_leitura() >= MAX_PRETO_CHEGADA)
+	if (sensor_chegada.get_ult_leitura() >= MAX_PRETO_CHEGADA && (millis() - curva_time > 30))
 	{
-		bool ignorar_leitura = (millis() - encru_time) <= (300) ? true : false;
-		if (ignorar_leitura)
-		{
+		if(estado_s_chegada == 0){
 			qnt_linhas--;
 			Serial.println("qnt_linha: " + (String)qnt_linhas);
-			encru_time = millis();
 			if (qnt_linhas == 0){
-				modo = 'P';
 				Estado_corrida = false;
 			}
+			estado_s_chegada = 1;
 		}
+		else if(estado_s_chegada == 2) estado_s_chegada = 1;
+		
 	}
+	else if(estado_s_chegada == 1) estado_s_chegada = 0;
 }
 
+//Mapeamento
 void Seguidor_de_Linha::checar_secao()
 {
-	bool ignorar_leitura = (millis() - secao_time) <= (300) ? true : false;
-	if (sensor_mapa.get_ult_leitura() >= MAX_PRETO_MAPA && (ignorar_leitura))
+	if (sensor_mapa.get_ult_leitura() >= MAX_PRETO_MAPA && (millis() - curva_time > 10))
 	{
-		Controlador.prox_secao();
-		secao_time = millis();
-		Serial.println("Secao" + (String)Controlador.get_secao());
+		if(estado_s_mapa == 0){
+			Controlador.prox_secao();
+			Serial.println("Secao" + (String)Controlador.get_secao());
+			estado_s_mapa = 1;
+		}
+		else if(estado_s_mapa == 2) estado_s_mapa = 1;
+		
 	}
+	else if(estado_s_mapa == 1) estado_s_mapa = 0;
 }
 

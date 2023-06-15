@@ -1,8 +1,9 @@
 #include "seguidor.hpp"
 
-#define TESTE_SENSOR 1;
-#define TESTE_CTRL 1;
+//#define TESTE_SENSOR 1;
+//#define TESTE_CTRL 1;
 //#define TESTE_VEL 1;
+#define SEM_BLUETOOTH 1;
 
 
 #ifdef TESTE_SENSOR
@@ -47,6 +48,33 @@ void setup() {
 	#ifdef TESTE_CTRL
 	//delay(4000);
 	#endif
+
+	#ifdef SEM_BLUETOOTH
+	CEMLinha.ler_sensores_sem_pausa = true;
+	ADCSRA |= (1 << ADSC);
+	while (CEMLinha.sensor_chegada.get_ult_leitura() < 500) delay(1);
+	delay(1000);
+	CEMLinha.calibracao();
+	pinMode(13, OUTPUT);
+	
+	CEMLinha.ler_sensores_sem_pausa = true;
+	ADCSRA |= (1 << ADSC);
+	CEMLinha.ler_sensores_fast = true;
+	while (abs(CEMLinha.sns_frontais.erro_analogico()) > 1)
+	{
+		while(abs(CEMLinha.sns_frontais.erro_analogico()) > 1){
+			digitalWrite(13,LOW);
+			delay(100);
+			digitalWrite(13, HIGH);
+		}
+		digitalWrite(13,HIGH);
+		delay(3000);
+	}
+	CEMLinha.ler_sensores_fast = false;
+	CEMLinha.ler_sensores_sem_pausa = false;
+	ADCSRA |= (0 << ADSC);
+	CEMLinha.run();
+	#endif
 }
 
 ISR(ADC_vect) {
@@ -58,7 +86,7 @@ ISR(ADC_vect) {
 		CEMLinha.sensor_mapa.ler();
 	}
 	else{
-		CEMLinha.sns_frontais.ler_sensor(cont_sns);
+		CEMLinha.sns_frontais.ler_sensor(cont_sns, CEMLinha.ler_sensores_fast);
 	}
 	
 	cont_sns++;
@@ -80,6 +108,7 @@ ISR(ADC_vect) {
 }
 #ifdef TESTE_CTRL
 controlador_PID control_teste;
+SimpleKalmanFilter kf = SimpleKalmanFilter(0.01,0.01,0.01);
 #endif
 
 void loop()
@@ -90,13 +119,13 @@ void loop()
 	}
 	else
 	{
-		if(CEMLinha.tempo < CEMLinha.TMP_calib){
+		
+		/*if(CEMLinha.tempo < CEMLinha.TMP_calib){
 			CEMLinha.tempo++;
 			CEMLinha.seguir_linha_final();
 		}
-		else if(CEMLinha.get_modo() != 'P'){
-			CEMLinha.set_direcao('P');
-			CEMLinha.set_velocidade_fast(0,0);
+		else */if(CEMLinha.get_modo() != 'B' && (CEMLinha.get_modo() != 'J')){
+			CEMLinha.stop();
 		}
 		
 	}
@@ -108,7 +137,7 @@ void loop()
 
 	// Teste 
 	#ifdef TESTE_SENSOR
-	if(millis() - tmp_mili > 50){
+	if(millis() - tmp_mili > 200){
 		
 		tmp_mili = millis();
 		//Serial.println((int)(cont/8));
@@ -116,16 +145,20 @@ void loop()
 		cont = 0;
 		cont2 = 0;
 		#ifndef TESTE_CTRL
-		Serial.println(CEMLinha.sns_frontais.sensores[0].get_ult_leitura());
-		Serial.println(CEMLinha.sns_frontais.sensores[1].get_ult_leitura());
-		Serial.println(CEMLinha.sns_frontais.sensores[2].get_ult_leitura());
-		Serial.println(CEMLinha.sns_frontais.sensores[3].get_ult_leitura());
-		Serial.println(CEMLinha.sns_frontais.sensores[4].get_ult_leitura());
-		Serial.println(CEMLinha.sns_frontais.sensores[5].get_ult_leitura());
+		Serial.println();
+		Serial.print(CEMLinha.sns_frontais.sensores[0].get_ult_leitura()); Serial.print(" - ");  Serial.println(CEMLinha.sns_frontais.sensores[0].get_ult_leitura_percent());
+		Serial.print(CEMLinha.sns_frontais.sensores[1].get_ult_leitura()); Serial.print(" - ");  Serial.println(CEMLinha.sns_frontais.sensores[1].get_ult_leitura_percent());
+		Serial.print(CEMLinha.sns_frontais.sensores[2].get_ult_leitura()); Serial.print(" - ");  Serial.println(CEMLinha.sns_frontais.sensores[2].get_ult_leitura_percent());
+		Serial.print(CEMLinha.sns_frontais.sensores[3].get_ult_leitura()); Serial.print(" - ");  Serial.println(CEMLinha.sns_frontais.sensores[3].get_ult_leitura_percent());
+		Serial.print(CEMLinha.sns_frontais.sensores[4].get_ult_leitura()); Serial.print(" - ");  Serial.println(CEMLinha.sns_frontais.sensores[4].get_ult_leitura_percent());
+		Serial.print(CEMLinha.sns_frontais.sensores[5].get_ult_leitura()); Serial.print(" - ");  Serial.println(CEMLinha.sns_frontais.sensores[5].get_ult_leitura_percent());
+		Serial.println(CEMLinha.sns_frontais.erro_analogico());
+		Serial.println(CEMLinha.sensor_chegada.get_ult_leitura());
 		#endif
 		#ifdef TESTE_CTRL
 		Serial.println(corr);
 		Serial.println(erro_anl, 4);
+		Serial.println(kf.updateEstimate(erro_anl), 4);
 		#endif
 	}
 	cont2++;

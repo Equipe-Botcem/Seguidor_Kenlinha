@@ -10,7 +10,6 @@ void Seguidor_de_Linha::ControlCMD(String command)
 	const char SEND_CONST = 'T';
 	const char TESTE_LATERAL = 'L';
 	const char TESTE_FRONTAL = 'F';
-	const char TESTE_CURVA = 'G';
 	const char JOYSTICK = 'J';
 	switch (command[0])
 	{
@@ -36,9 +35,6 @@ void Seguidor_de_Linha::ControlCMD(String command)
 	case TESTE_LATERAL:
 		teste_lateral();
 		break;	
-	case TESTE_CURVA:
-		teste_curva();
-		break;
 	case JOYSTICK:
 		joystick_control(command);
 		break;
@@ -68,8 +64,6 @@ void Seguidor_de_Linha::send_Consts(){
 	Serial.print(Kp); 			Serial.print("|");
 	Serial.print(Ki); 			Serial.print("|");
 	Serial.print(Kd); 			Serial.print("|");
-	Serial.print(0); 			Serial.print("|");
-	Serial.print(0); 			Serial.print("|");
 	Serial.print(vel_min);  	Serial.print("|");
 	Serial.print(vel_max);   	Serial.print("|");
 	Serial.print(TMP_calib); 	Serial.print("|");
@@ -101,12 +95,11 @@ void Seguidor_de_Linha::set_Consts(String valores)
 	dados[cont] = dados_texto[cont].toDouble();
 	
 	Controlador.set_const(dados[0], dados[1], dados[2]); //KP,KI,KD
-	Controlador.set_vel(dados[6], dados[5]);
-	TMP_calib = dados[7];
+	Controlador.set_vel(dados[4], dados[3]);
+	TMP_calib = dados[5];
 
-	Controlador.set_estado_mapa(dados[8] == 1 ? true : false);
+	Controlador.set_estado_mapa(dados[6] == 1 ? true : false);
 	Controlador.reset();
-	//delete[] dados_texto;
 	delay(200);
 	send_Consts();
 }
@@ -116,17 +109,24 @@ void Seguidor_de_Linha::stop()
 	set_direcao('B');
 	modo = 'B';
 	send_Consts();
+	Serial.println("Tempo: " + (String)(millis() - start_time));
 	Controlador.reset();
 	Estado_corrida = false;
 }
 
 void Seguidor_de_Linha::run()
 {
+	ler_sensores_sem_pausa = true;
+	ADCSRA |= (1 << ADSC);
+	delay(10);
+	ler_sensores_sem_pausa = false;
+
 	set_direcao('F');
 	modo = 'N';
 	tempo = 0;
-	encru_time = 0;
-	secao_time = 0;
+	start_time = millis();
+	estado_s_chegada = 0;
+	curva_time = 0;
 	qnt_linhas = 2;
 	Estado_corrida = true;
 	Controlador.reset();
@@ -149,21 +149,13 @@ void Seguidor_de_Linha::teste_frontal(){
 
 	Serial.print("Resultado teste frontal: ");
 	Serial.println(soma/n_sensores);
-	Serial.println("Max preto: " + (String)MAX_PRETO);
+	Serial.println("Angulo: " + (String)sns_frontais.erro_analogico());
 }
 void Seguidor_de_Linha::teste_lateral(){
-	Serial.println("Chegada: " + (String)sensor_chegada.ler());
-	Serial.println("Mapa: " + (String)sensor_mapa.ler());
-}
-void Seguidor_de_Linha::teste_curva(){
-	double valor_lido = 0;
-	for (unsigned int i = 0; i < 1000; i++)
-	{
-		valor_lido += 1023 - analogRead(A7);
-		delay(2);
-	}
-	Serial.print("Resultado teste lateral: ");
-	Serial.println(valor_lido/1000);
-	Serial.print("Modo: ");
-	Serial.println(modo);
+	ler_sensores_sem_pausa = true;
+	ADCSRA |= (1 << ADSC);
+	delay(50);
+	ler_sensores_sem_pausa = false;
+	Serial.println("Chegada: " + (String)sensor_chegada.get_ult_leitura());
+	Serial.println("Mapa: " + (String)sensor_mapa.get_ult_leitura());
 }

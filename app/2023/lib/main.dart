@@ -301,7 +301,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   void sendCMD(String typeCMD){
     String cmd = "";
     if(typeCMD == "S"){
-      cmd = "S: KP" + KP.text + ",KI" + KI.text + ",KD" + KD.text + ",VB0" + ",K0" +
+      cmd = "S: KP" + KP.text + ",KI" + KI.text + ",KD" + KD.text +
       ",VLMIN" + VEL_MIN.text + ",VLMAX" + VEL_MAX.text + ",TMPFR" + TMP_FORA.text
       + ",USARMAPA" + (USE_MAP == true ? "1" : "0") + ",MAPA" + mapa.text;
     }
@@ -335,21 +335,21 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
       KP.text = nums[0];
       KI.text = nums[1];
       KD.text = nums[2];
-      VEL_MIN.text = nums[5];
-      VEL_MAX.text = nums[6];
-      TMP_FORA.text = nums[7];
+      VEL_MIN.text = nums[3];
+      VEL_MAX.text = nums[4];
+      TMP_FORA.text = nums[5];
     }
     KP_robot = nums[0];
     KI_robot = nums[1];
     KD_robot = nums[2];
-    VEL_MIN_robot = nums[5];
-    VEL_MAX_robot = nums[6];
-    TMP_FORA_robot = nums[7];
-    if(nums[8] == "1") {
+    VEL_MIN_robot = nums[3];
+    VEL_MAX_robot = nums[4];
+    TMP_FORA_robot = nums[5];
+    if(nums[6] == "1") {
       USE_MAP = true;
     }
     else {USE_MAP = false;}
-    mapa.text = nums[9];
+    mapa.text = nums[7];
     setState((){});
   }
 

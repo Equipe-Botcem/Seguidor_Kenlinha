@@ -11,7 +11,7 @@ void Seguidor_de_Linha::sensor_calib(int pos){
 
 		set_direcao('T');
 		set_velocidade(vel_calib,vel_calib);
-		while (!sns_frontais.comp_max_value(2 * sns_frontais.get_min_media())){
+		while (!sns_frontais.comp_max_value(3 * sns_frontais.get_min_media())){
 			delay(1);
 		}
 

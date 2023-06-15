@@ -2,9 +2,14 @@
 
 void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
 {
+    
 	float PID = get_correcao(erro);
 	int v_max = vel_max;
-	//if(abs(erro) < 1) v_max = (1 - abs(erro)/2) * vel_max;
+    if(abs(erro) > 7 && (abs(erro_antigo) < abs(erro))){
+        (*m_dir).set_velocidade_fast(-100);
+        (*m_esq).set_velocidade_fast(-100);
+        delay(abs(erro) - 7);
+    }
 	if(PID >= 0){
 		float vel_corrigida = v_max - PID;
 		if(vel_corrigida < vel_min) vel_corrigida = vel_min;
@@ -28,40 +33,20 @@ float controlador_PID::get_correcao(float erro){
 		_ki = LKi;
 		_kd = LKd;
 	}*/
-	
-	if(abs(erro) <= 1){
-		
-
-		//KI 1 grau
-		
-		if(abs(erro) <= 0.005 || erro*erro_I < 0) {
-			erro_I = 0;
-			erro_antigo_I = 0;
-		}
-		else if(millis() - tempo_ult_atualizacao >= 2) {
-			float variacao_erro = abs(erro) - abs(erro_antigo_I);
-			if((variacao_erro >= 0) || erro*erro_antigo_I < 0){
-				erro_I += variacao_erro*(erro >= 0 ? 500:-500);
-				tempo_ult_atualizacao = millis();
-			}
-			else if(variacao_erro <= (-0.015*abs(erro))){
-				erro_I -= variacao_erro*(erro >= 0 ? 500:-500);
-				tempo_ult_atualizacao = millis();
-			}
-			erro_antigo_I = erro;
-		}
-		
-		
-	}
-	else{
-		
-		erro_P = erro * abs(erro)/3;
-		erro_antigo_I = erro;
-		erro_I = 0;
-		erro_D = erro - erro_antigo;
-	}
+    /*if(abs(erro) < 0.04){
+        erro_I = 0;
+        erro_antigo = 0;
+        return 0;
+    }*/
+	float correcao = _kp * erro + _ki * erro_I + _kd * (erro - erro_antigo);
 	erro_antigo = erro;
-	return ((_kp * erro_P) + (_ki * erro_I) + (_kd * erro_D));
+	erro_I += erro;
+	if((erro_I <= 0 && erro >= 0) || (erro_I >= 0 && erro <= 0))// || (abs(erro) < 0.1))
+		erro_I = 0;
+
+	if(abs(correcao) > 510) correcao = 510 * (correcao > 0? 1:-1);
+	return correcao;
+	
 }
 
 void controlador_PID::reset(){
@@ -134,21 +119,18 @@ float controlador_PID::get_erro_antigo(){
     return erro_antigo;
 }
 
-/*KI 2 grau
-		if(abs(erro) <= 0.1 || erro*erro_I < 0) {
-			erro_I = 0;
-			erro_antigo_I = 0;
-		}
-		else if(millis() - tempo_ult_atualizacao >= 2) {
-			float variacao_erro = abs(erro) - abs(erro_antigo_I);
-			if((variacao_erro >= 0) || erro*erro_antigo_I < 0){
-				erro_I += variacao_erro*(erro >= 0 ? 500:-500);
-				tempo_ult_atualizacao = millis();
-			}
-			else if(variacao_erro <= (-0.001)){
-				erro_I -= variacao_erro*(erro >= 0 ? 500:-500);
-				tempo_ult_atualizacao = millis();
-			}
-			erro_antigo_I = erro;
-		}
-		erro_P = 0;*/
+void controlador_PID::encontrar_linha(float erro, motor * m_dir, motor * m_esq, char lado = 'D'){
+
+    if(abs(erro) > 10) erro *= (lado == 'E' ? 1:-1);
+    float PID = get_correcao(erro);
+	if(PID < 0){
+		float vel_corrigida = PID;
+        (*m_dir).set_velocidade(vel_corrigida);
+        (*m_esq).set_velocidade(0);
+	}
+	else{
+		float vel_corrigida = -PID;
+		(*m_dir).set_velocidade(0);
+        (*m_esq).set_velocidade(vel_corrigida);
+	}
+}

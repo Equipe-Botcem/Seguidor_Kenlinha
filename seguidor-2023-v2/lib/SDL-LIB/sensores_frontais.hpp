@@ -87,7 +87,7 @@ public:
     float get_max_media();
     float get_min_media();
 
-    void ler_sensor(int n);
+    void ler_sensor(int n, bool fast);
     
     bool comp_max_value(int valor); 
 };

@@ -4,57 +4,20 @@
 #define CTRLR_PID_H
 class controlador_PID
 {
-/*KI para 1 grau*/
-/*
-KP: 15
-KI: 0.106 
-KD: 0
+/*Costantes
 
-VEL_MAX = -VEL_MIN = 205
-*/
-/*
-KP: 13
-KI: 0.04
-KD: 0
-
-VEL_MAX = -VEL_MIN = 205
-*/
-/*
-KP: 12
-KI: 0.007
-KD: 0
-
-VEL_MAX = -VEL_MIN = 205
-*/
-/*
-KP: 12
-KI: 0.01
-KD: 0
-
-VEL_MAX = -VEL_MIN = 205
-*/
-/*
-KP: 14
-KI: 0.268
-KD: 0
-
-VEL_MAX = -VEL_MIN = 255
-*/
-
-/*KI grau 2
-KP: 14
-KI: 0.03
-KD: 0
-
-VEL_MAX = -VEL_MIN = 235
+Perfeita:
+KP: 19
+KI: 0.02
+KD: 1989
 
 */
 private:
     int vel_max = 255;
     int vel_min = -255;
-    float Kp = 15;
-    float Ki = 0.05;
-    float Kd = 0;
+    float Kp = 24;
+    float Ki = 0.022;
+    float Kd = 1497;
 
     float erro_P = 0;
 
@@ -81,6 +44,7 @@ private:
 public:
     void corrigir_trajeto(float erro, motor * m_dir, motor * m_esq);
     void prox_secao();
+    void encontrar_linha(float erro, motor * m_dir, motor * m_esq, char lado);
 
     void set_vel(int v_max, int v_min);
 
