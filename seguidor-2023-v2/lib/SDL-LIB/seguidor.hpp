@@ -14,7 +14,7 @@ class Seguidor_de_Linha
         motor motor_dir;
         motor motor_esq;
 
-        SimpleKalmanFilter Kalman = SimpleKalmanFilter(0.01,0.01,0.01);
+        SimpleKalmanFilter Kalman = SimpleKalmanFilter(0.008,0.008,0.008);
 
         unsigned long start_time = 0;
         char modo = 'N';

@@ -3,7 +3,7 @@
 //#define TESTE_SENSOR 1;
 //#define TESTE_CTRL 1;
 //#define TESTE_VEL 1;
-#define SEM_BLUETOOTH 1;
+//#define SEM_BLUETOOTH 1;
 
 
 #ifdef TESTE_SENSOR
@@ -108,7 +108,7 @@ ISR(ADC_vect) {
 }
 #ifdef TESTE_CTRL
 controlador_PID control_teste;
-SimpleKalmanFilter kf = SimpleKalmanFilter(0.01,0.01,0.01);
+SimpleKalmanFilter kf = SimpleKalmanFilter(0.008,0.01,0.008);
 #endif
 
 void loop()
@@ -137,7 +137,7 @@ void loop()
 
 	// Teste 
 	#ifdef TESTE_SENSOR
-	if(millis() - tmp_mili > 200){
+	if(millis() - tmp_mili > 10){
 		
 		tmp_mili = millis();
 		//Serial.println((int)(cont/8));
@@ -156,14 +156,20 @@ void loop()
 		Serial.println(CEMLinha.sensor_chegada.get_ult_leitura());
 		#endif
 		#ifdef TESTE_CTRL
-		Serial.println(corr);
-		Serial.println(erro_anl, 4);
-		Serial.println(kf.updateEstimate(erro_anl), 4);
+		//Serial.println(corr);
+		float filtro = kf.updateEstimate(erro_anl);
+		Serial.print(erro_anl, 6);
+		Serial.print(" ");
+		Serial.println(filtro, 6);
 		#endif
 	}
 	cont2++;
 	#endif
+
 }
 void serialEvent(){
-	if(Serial.available()) CEMLinha.ControlCMD(Serial.readStringUntil(';'));
+	if(Serial.available()) 
+	{	
+		CEMLinha.ControlCMD(Serial.readStringUntil(';'));
+	}
 }

@@ -21,8 +21,8 @@ Seguidor_de_Linha::Seguidor_de_Linha()
 }
 //funcao para seguir a linha
 float Seguidor_de_Linha::seguir_linha(){
-	//float erro = Kalman.updateEstimate(sns_frontais.erro_analogico());
-	float erro = sns_frontais.erro_analogico();
+	float erro = Kalman.updateEstimate(sns_frontais.erro_analogico());
+	//float erro = sns_frontais.erro_analogico();
 
 	if(erro == 111111){
 		estado_s_chegada = 2;
@@ -30,7 +30,7 @@ float Seguidor_de_Linha::seguir_linha(){
 		erro = 0;
 	}
 	else if(abs(erro) < 3){
-		checar_chegada(); // 1 if em 
+		//checar_chegada(); 
 		//checar_secao();
 	}
 	else{

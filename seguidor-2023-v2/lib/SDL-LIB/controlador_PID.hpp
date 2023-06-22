@@ -15,9 +15,9 @@ KD: 1989
 private:
     int vel_max = 255;
     int vel_min = -255;
-    float Kp = 24;
-    float Ki = 0.022;
-    float Kd = 1497;
+    float Kp = 25;
+    float Ki = 0.0170968;
+    float Kd = 1640;
 
     float erro_P = 0;
 
