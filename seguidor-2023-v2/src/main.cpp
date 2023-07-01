@@ -29,7 +29,6 @@ void setup() {
 	//interrupcao
 	ADCSRA |= (1 << ADIE);
 	sei();
-
 	//setando para comecar no sensor 0
 	ADMUX = (1 << 6) | ((CEMLinha.getpin(cont_sns) - 14) & 0x07);
 	ADCSRA |= (0 << ADSC);
