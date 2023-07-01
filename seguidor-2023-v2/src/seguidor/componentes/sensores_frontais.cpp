@@ -3,27 +3,6 @@
 sensores_frontais::sensores_frontais(){
     reset();
 }
-float sensores_frontais::erro_digital(){
-    /*float erro = 0;
-
-	int s0 = sensores[0].get_ult_leitura() > limites[0] ? 1:0;
-	int s1 = sensores[1].get_ult_leitura() > limites[1] ? 2:0;
-	int s2 = sensores[2].get_ult_leitura() > limites[2] ? 4:0;
-	int s3 = sensores[3].get_ult_leitura() > limites[3] ? 8:0;
-	int s4 = sensores[4].get_ult_leitura() > limites[4] ? 16:0;
-	int s5 = sensores[5].get_ult_leitura() > limites[5] ? 27:0;
-    int pos = s0 + s1 + s2 + s3 + s4 + s5;
-	
-	erro = casos[pos];
-	
-	if(pos == 0 && erro_antigo != 0) erro *= abs(erro_antigo)/erro_antigo;
-	else if(pos == 58) erro = 111111;
-
-    erro_antigo = erro;
-	return erro;*/
-    return 0;
-}
-
 float sensores_frontais::erro_analogico(){
     float erro = 0;
     float soma = 0;
@@ -38,15 +17,15 @@ float sensores_frontais::erro_analogico(){
         erro += valor * ((i)*8 + 4.6);
         soma += valor;
     }
-    if(soma == 0) erro = 30 * (erro_antigo > 0 ? 1:-1);
+    if(soma == 0) erro = 30 * (erro_antigo_alto > 0 ? 1:-1);
     else if(soma > 4.5) erro = 111111;
     else /*if(soma != 0)*/{
         erro /= soma;
-        erro = atan(erro/125);
+        erro = atan(erro/125.4);
         erro *= 57.29578;
     }
     erro_antigo = erro;
-    if(abs(erro) > 1) erro_antigo_alto = erro; 
+    if(abs(erro) > 0.2) erro_antigo_alto = erro; 
 	return erro;
 }
 

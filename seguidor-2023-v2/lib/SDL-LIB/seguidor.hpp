@@ -32,7 +32,7 @@ class Seguidor_de_Linha
         unsigned long curva_time = 0;
         char direcao_atual = 'F';
 
-        int pinos[14] = {A5,A4,A3,A2,A1,A0,
+        int pinos[14] = {A0,A1,A2,A3,A4,A5, //Sensores frontais
                         A6, A7, 6, 9, 10, 5, 8, 7};
                         
     public:

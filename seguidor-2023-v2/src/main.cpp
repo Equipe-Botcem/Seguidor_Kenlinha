@@ -158,7 +158,7 @@ void loop()
 		#ifdef TESTE_CTRL
 		//Serial.println(corr);
 		float filtro = kf.updateEstimate(erro_anl);
-		Serial.print(erro_anl, 6);
+		Serial.print(corr, 6);
 		Serial.print(" ");
 		Serial.println(filtro, 6);
 		#endif

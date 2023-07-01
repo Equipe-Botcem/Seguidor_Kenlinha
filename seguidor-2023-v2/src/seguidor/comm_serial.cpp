@@ -116,6 +116,8 @@ void Seguidor_de_Linha::stop()
 
 void Seguidor_de_Linha::run()
 {
+	delay(4000);
+
 	ler_sensores_sem_pausa = true;
 	ADCSRA |= (1 << ADSC);
 	delay(10);
