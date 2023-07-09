@@ -108,6 +108,7 @@ void Seguidor_de_Linha::stop()
 {
 	set_direcao('B');
 	modo = 'B';
+	ler_sensores_fast = true;
 	send_Consts();
 	Serial.println("Tempo: " + (String)(millis() - start_time));
 	Controlador.reset();
@@ -116,8 +117,8 @@ void Seguidor_de_Linha::stop()
 
 void Seguidor_de_Linha::run()
 {
-	delay(4000);
-
+	//delay(4000);
+	ler_sensores_fast = true;
 	ler_sensores_sem_pausa = true;
 	ADCSRA |= (1 << ADSC);
 	delay(10);
@@ -130,6 +131,7 @@ void Seguidor_de_Linha::run()
 	estado_s_chegada = 0;
 	curva_time = 0;
 	qnt_linhas = 2;
+	
 	Estado_corrida = true;
 	Controlador.reset();
 }

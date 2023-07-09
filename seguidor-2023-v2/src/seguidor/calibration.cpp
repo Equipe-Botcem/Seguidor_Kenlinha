@@ -54,6 +54,7 @@ void Seguidor_de_Linha::calibracao()
 {
 	//iniciando interrupcao sem pausa
 	ler_sensores_sem_pausa = true;
+	ler_sensores_fast = false;
 	ADCSRA |= (1 << ADSC);
 
 	Serial.println("Calibrando sensores frontais");
@@ -69,10 +70,20 @@ void Seguidor_de_Linha::calibracao()
 	set_direcao('E');
 	set_velocidade(vel_calib,vel_calib);
 
+	/*Serial.println("Max Leituras:");
+	for(int i = 0; i < sns_frontais.get_N_sns(); i++){
+		Serial.println(i);
+		Serial.println((String)sns_frontais.sensores[i].get_max_leitura());
+		Serial.println((String)sns_frontais.sensores[i].get_min_leitura());
+		Serial.println();
+
+	}*/
+
 	while (sns_frontais.sensores[2].get_ult_leitura() < sns_frontais.limites[2]){delay(1);}
 	set_direcao('B');
 	set_velocidade(0,0);
 	set_direcao('F');
+
 	ler_sensores_sem_pausa = false;
 
 }

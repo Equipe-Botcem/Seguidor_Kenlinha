@@ -30,13 +30,14 @@ float Seguidor_de_Linha::seguir_linha(){
 		erro = 0;
 	}
 	else if(abs(erro) < 3){
-		//checar_chegada(); 
+		checar_chegada(); 
 		//checar_secao();
 	}
 	else{
 		//if(Controlador.get_controle_secao() == 1) Controlador.prox_secao();
 		curva_time = millis();
 	}
+	checar_chegada(); 
 	ADCSRA |= (1 << ADSC);
 	Controlador.corrigir_trajeto(erro,&motor_dir, &motor_esq);
 	return erro;
@@ -88,7 +89,7 @@ void Seguidor_de_Linha::set_velocidade_fast(int vel_dir, int vel_esq){
 
 void Seguidor_de_Linha::checar_chegada()
 {
-	if (sensor_chegada.get_ult_leitura() >= MAX_PRETO_CHEGADA && (millis() - curva_time > 30))
+	if (sensor_chegada.get_ult_leitura() >= MAX_PRETO_CHEGADA && (millis() - curva_time > 10))
 	{
 		if(estado_s_chegada == 0){
 			qnt_linhas--;

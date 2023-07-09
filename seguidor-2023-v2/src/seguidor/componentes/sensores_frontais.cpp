@@ -18,7 +18,7 @@ float sensores_frontais::erro_analogico(){
         soma += valor;
     }
     if(soma == 0) erro = 30 * (erro_antigo_alto > 0 ? 1:-1);
-    else if(soma > 4.5) erro = 111111;
+    else if(soma > 4) erro = 111111;
     else /*if(soma != 0)*/{
         erro /= soma;
         erro = atan(erro/125.4);
