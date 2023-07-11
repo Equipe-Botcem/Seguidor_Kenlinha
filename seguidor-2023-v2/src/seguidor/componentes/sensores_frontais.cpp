@@ -8,24 +8,24 @@ float sensores_frontais::erro_analogico(){
     float soma = 0;
 
     float valor = 0;
-	for(int i = 0; i < 3; i++){
+	for(int i = 0; i < N_sns/2; i++){
         valor = sensores[i].get_ult_leitura_percent();
-        erro += - valor * ((2-i)*8 + 4.6); //distancia dos sensores ao centro da pcb vermelha
+        erro += - valor * ((N_sns/2-1-i)*8 + 4.6); //distancia dos sensores ao centro da pcb vermelha
         soma += valor;
 
-        valor = sensores[i+3].get_ult_leitura_percent();
+        valor = sensores[i+N_sns/2].get_ult_leitura_percent();
         erro += valor * ((i)*8 + 4.6);
         soma += valor;
     }
     if(soma == 0) erro = 30 * (erro_antigo_alto > 0 ? 1:-1);
-    else if(soma > 4) erro = 111111;
+    else if(soma > N_sns - 0.5) erro = 111111;
     else /*if(soma != 0)*/{
         erro /= soma;
         erro = atan(erro/125.4);
         erro *= 57.29578;
     }
     erro_antigo = erro;
-    if(abs(erro) > 0.2) erro_antigo_alto = erro; 
+    if(abs(erro) > 1) erro_antigo_alto = erro; 
 	return erro;
 }
 

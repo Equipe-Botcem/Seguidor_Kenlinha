@@ -108,6 +108,7 @@ ISR(ADC_vect) {
 #ifdef TESTE_CTRL
 controlador_PID control_teste;
 SimpleKalmanFilter kf = SimpleKalmanFilter(0.008,0.01,0.008);
+
 #endif
 
 void loop()
@@ -156,6 +157,7 @@ void loop()
 		#endif
 		#ifdef TESTE_CTRL
 		//Serial.println(corr);
+		CEMLinha.ler_sensores_fast = false;
 		float filtro = kf.updateEstimate(erro_anl);
 		Serial.print(corr, 6);
 		Serial.print(" ");

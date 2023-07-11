@@ -4,20 +4,14 @@
 #define CTRLR_PID_H
 class controlador_PID
 {
-/*Costantes
-
-Perfeita:
-KP: 19
-KI: 0.02
-KD: 1989
-
-*/
 private:
     int vel_max = 255;
     int vel_min = -255;
     float Kp = 25;
     float Ki = 0.0170968;
-    float Kd = 1640;
+    float Kd = 1642;
+
+    unsigned long tmp_passado = 0;
 
     float erro_P = 0;
 
@@ -38,7 +32,6 @@ private:
 
     const static int T_mapa = 40;
     int secao_atual = 0;
-
     bool seguir_mapa = false;
     int mapa[T_mapa] = {0};
 public:
@@ -64,7 +57,7 @@ public:
     int get_controle_secao();
     float get_erro_antigo();
 
-    float get_correcao(float erro);
+    float get_correcao(float erro, bool att = true);
 
     void reset();
 };

@@ -25,6 +25,9 @@ float Seguidor_de_Linha::seguir_linha(){
 	//float erro = sns_frontais.erro_analogico();
 
 	if(erro == 111111){
+		if(sensor_chegada.get_ult_leitura() >= MAX_PRETO_CHEGADA){
+			Estado_corrida = false;
+		}
 		estado_s_chegada = 2;
 		estado_s_mapa = 2;
 		erro = 0;
@@ -34,6 +37,13 @@ float Seguidor_de_Linha::seguir_linha(){
 		//checar_secao();
 	}
 	else{
+		if(abs(erro) > 20){
+			if(tmp_fora_linha == 0) tmp_fora_linha = millis();
+			else if(millis() - tmp_fora_linha > 3000){
+				Estado_corrida = false;
+				tmp_fora_linha = 0;
+			}
+		}else tmp_fora_linha = 0;
 		//if(Controlador.get_controle_secao() == 1) Controlador.prox_secao();
 		curva_time = millis();
 	}
@@ -96,6 +106,9 @@ void Seguidor_de_Linha::checar_chegada()
 			Serial.println("qnt_linha: " + (String)qnt_linhas);
 			if (qnt_linhas == 0){
 				Estado_corrida = false;
+			}
+			else if(qnt_linhas == 1){
+				start_time = millis();
 			}
 			estado_s_chegada = 1;
 		}

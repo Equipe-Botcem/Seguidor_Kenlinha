@@ -28,11 +28,12 @@ class Seguidor_de_Linha
         int estado_s_chegada = 0;
         int estado_s_mapa = 0;
         //-------------------//
+        unsigned long tmp_fora_linha = 0;
         int qnt_linhas = 2;
         unsigned long curva_time = 0;
         char direcao_atual = 'F';
 
-        int pinos[14] = {A0,A1,A2,A3,A4,A5, //Sensores frontais
+        int pinos[14] = {A1,A2,A3,A4,A0,A5, //Sensores frontais
                         A6, A7, 6, 9, 10, 5, 8, 7};
                         
     public:

@@ -28,7 +28,7 @@ int sensor::get_max_leitura(){ return valor_max_lido;}
 int sensor::get_min_leitura(){ return valor_min_lido;}
 int sensor::get_ult_leitura(){ return ultima_leitura;}
 float sensor::get_ult_leitura_percent(){
-    int dead_zone = (valor_min_lido + 80);
+    int dead_zone = (valor_min_lido + 300);
     if(dead_zone - ultima_leitura > 0) return 0;
     
     float percent = float(ultima_leitura - dead_zone)/float(valor_max_lido -dead_zone);
