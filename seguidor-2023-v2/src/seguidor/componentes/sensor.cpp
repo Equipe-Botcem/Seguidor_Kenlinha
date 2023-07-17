@@ -4,17 +4,17 @@
 sensor::sensor()
 {
     ultima_leitura = -1; valor_max_lido = -1; valor_min_lido = 1024;
-    pin_dado = -1;
+    pin_dado = -1; dead_percent = 0.102;
 }
 int sensor::ler(){
-    ultima_leitura = (3*(1023 - analogRead(pin_dado)) + ultima_leitura)/4;
+    ultima_leitura = 1023 - analogRead(pin_dado);
     if(ultima_leitura > valor_max_lido) valor_max_lido = ultima_leitura;
     if(ultima_leitura < valor_min_lido) valor_min_lido = ultima_leitura;
     return ultima_leitura;
 }
 
 int sensor::ler_fast(){
-    ultima_leitura = (3*(1023 - analogRead(pin_dado)) + ultima_leitura)/4;
+    ultima_leitura = 1023 - analogRead(pin_dado);
     return ultima_leitura;
 }
 int sensor::calc_limite(int fator){
@@ -28,11 +28,11 @@ int sensor::get_max_leitura(){ return valor_max_lido;}
 int sensor::get_min_leitura(){ return valor_min_lido;}
 int sensor::get_ult_leitura(){ return ultima_leitura;}
 float sensor::get_ult_leitura_percent(){
-    int dead_zone = (valor_min_lido + 300);
-    if(dead_zone - ultima_leitura > 0) return 0;
+
     
-    float percent = float(ultima_leitura - dead_zone)/float(valor_max_lido -dead_zone);
-    if(percent > 0.98) return 1;
+    float percent = float(ultima_leitura -valor_min_lido)/float(valor_max_lido-valor_min_lido) - dead_percent;
+    if(percent < 0) return 0;
+    if(percent > 1 - dead_percent - 0.02) return 1;
     return percent;
 }
 int sensor::get_pin(){ return pin_dado;}

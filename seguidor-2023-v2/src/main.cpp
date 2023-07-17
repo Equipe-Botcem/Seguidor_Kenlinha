@@ -82,7 +82,7 @@ ISR(ADC_vect) {
 		CEMLinha.sensor_chegada.ler();
 	}
 	else if(cont_sns == 7){
-		CEMLinha.sensor_mapa.ler();
+		//CEMLinha.sensor_mapa.ler();
 	}
 	else{
 		CEMLinha.sns_frontais.ler_sensor(cont_sns, CEMLinha.ler_sensores_fast);
@@ -113,21 +113,11 @@ SimpleKalmanFilter kf = SimpleKalmanFilter(0.008,0.01,0.008);
 
 void loop()
 {
-	if (CEMLinha.Estado_corrida == true)
-	{
+	if (CEMLinha.Estado_corrida == true){
 		CEMLinha.seguir_linha();
 	}
-	else
-	{
-		
-		/*if(CEMLinha.tempo < CEMLinha.TMP_calib){
-			CEMLinha.tempo++;
-			CEMLinha.seguir_linha_final();
-		}
-		else */if(CEMLinha.get_modo() != 'B' && (CEMLinha.get_modo() != 'J')){
-			CEMLinha.stop();
-		}
-		
+	else if(CEMLinha.get_modo() != 'B' && (CEMLinha.get_modo() != 'J')){
+		CEMLinha.stop("Loop");
 	}
 
 	#ifdef TESTE_CTRL

@@ -19,6 +19,7 @@ public:
 	float erro_analogico();
     
 	int get_N_sns();
+	float get_erro_antigo();
 	float get_media();
     float get_max_media();
     float get_min_media();

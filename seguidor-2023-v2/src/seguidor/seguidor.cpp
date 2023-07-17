@@ -26,21 +26,21 @@ float Seguidor_de_Linha::seguir_linha(){
 
 	if(erro == 111111){
 		if(sensor_chegada.get_ult_leitura() >= MAX_PRETO_CHEGADA){
-			Estado_corrida = false;
+			stop("Todos no branco");
 		}
 		estado_s_chegada = 2;
 		estado_s_mapa = 2;
 		erro = 0;
 	}
 	else if(abs(erro) < 3){
-		checar_chegada(); 
+		checar_chegada();
 		//checar_secao();
 	}
 	else{
 		if(abs(erro) > 20){
 			if(tmp_fora_linha == 0) tmp_fora_linha = millis();
-			else if(millis() - tmp_fora_linha > 3000){
-				Estado_corrida = false;
+			else if(millis() - tmp_fora_linha > 1000){
+				stop("Muito tempo fora da linha");
 				tmp_fora_linha = 0;
 			}
 		}else tmp_fora_linha = 0;
@@ -54,9 +54,9 @@ float Seguidor_de_Linha::seguir_linha(){
 }
 
 float Seguidor_de_Linha::seguir_linha_final(){
-	float erro = sns_frontais.erro_analogico();
+	float erro = Kalman.updateEstimate(sns_frontais.erro_analogico());
 	ADCSRA |= (1 << ADSC);
-	Controlador.corrigir_trajeto(erro,&motor_dir, &motor_esq);
+	Controlador.corrigir_trajeto_sem_mover(erro,&motor_dir, &motor_esq);
 	return erro;
 }
 int Seguidor_de_Linha::getpin(int pin){
@@ -105,7 +105,7 @@ void Seguidor_de_Linha::checar_chegada()
 			qnt_linhas--;
 			Serial.println("qnt_linha: " + (String)qnt_linhas);
 			if (qnt_linhas == 0){
-				Estado_corrida = false;
+				stop("Sensor Chegada");
 			}
 			else if(qnt_linhas == 1){
 				start_time = millis();

@@ -14,7 +14,7 @@ class Seguidor_de_Linha
         motor motor_dir;
         motor motor_esq;
 
-        SimpleKalmanFilter Kalman = SimpleKalmanFilter(0.008,0.008,0.008);
+        SimpleKalmanFilter Kalman = SimpleKalmanFilter(0.008,0.008,0.015);
 
         unsigned long start_time = 0;
         char modo = 'N';
@@ -32,6 +32,7 @@ class Seguidor_de_Linha
         int qnt_linhas = 2;
         unsigned long curva_time = 0;
         char direcao_atual = 'F';
+        char lado_pista = 'D';
 
         int pinos[14] = {A1,A2,A3,A4,A0,A5, //Sensores frontais
                         A6, A7, 6, 9, 10, 5, 8, 7};
@@ -62,7 +63,7 @@ class Seguidor_de_Linha
         //comunicacao
         void ControlCMD(String command);
         void run();
-        void stop();
+        void stop(String agente = "desconhecido");
         
         void send_Consts();
         void set_Consts(String valores);
@@ -72,7 +73,7 @@ class Seguidor_de_Linha
         
         //calibracao
         void calibracao();
-        void sensor_calib(int pos);
+        int sensor_calib(int pos);
         
         //joystick
         void joystick_control(String cmd);

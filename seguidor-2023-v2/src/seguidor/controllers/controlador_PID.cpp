@@ -4,7 +4,7 @@ void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
 {
     
     
-    if(abs(erro) > 51 && abs(erro_antigo) < abs(erro)){
+    if(abs(erro) > 31 && abs(erro_antigo) < abs(erro)){
         float PID = get_correcao(erro, false);
         if(PID >= 0){
             float vel_corrigida = -255 + PID;
@@ -22,6 +22,7 @@ void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
 	else{
         float PID = get_correcao(erro);
         int v_max = vel_max;
+        if(abs(erro) > 2 && (abs(erro) < 9)) v_max-= abs(erro) * 10;
         if(PID >= 0){
             float vel_corrigida = v_max - PID;
             if(vel_corrigida < vel_min) vel_corrigida = vel_min;
@@ -38,7 +39,21 @@ void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
         }
     }
 }
-
+void controlador_PID::corrigir_trajeto_sem_mover(float erro, motor * m_dir, motor * m_esq){
+    float PID = get_correcao(erro);
+    if(PID >= 0){
+        int vel_corrigida = 120 - PID;
+        if(vel_corrigida < vel_min) vel_corrigida = vel_min;
+        (*m_dir).set_velocidade_fast(vel_corrigida);
+        (*m_esq).set_velocidade_fast(120);
+    }
+    else{
+        int vel_corrigida = 120 + PID;
+        if(vel_corrigida < vel_min) vel_corrigida = vel_min;
+        (*m_dir).set_velocidade_fast(120);
+        (*m_esq).set_velocidade_fast(vel_corrigida);
+    }
+}
 float controlador_PID::get_correcao(float erro, bool att){
     float _kp = Kp, _kd = Kd,_ki = Ki;
     
@@ -52,11 +67,8 @@ float controlador_PID::get_correcao(float erro, bool att){
         erro_antigo = 0;
         return 0;
     }*/
-    //_kd += abs(erro - erro_antigo) * 5400;
     float d_tempo = (micros() - tmp_passado) /1000.00;
     tmp_passado = micros();
-    //d_tempo = 1;
-    //_ki = 0;
 
 	float correcao = _kp * erro + _ki * erro_I * d_tempo + _kd * (erro - erro_antigo)/d_tempo;
 	if(att) erro_antigo = erro;

@@ -21,19 +21,28 @@ float sensores_frontais::erro_analogico(){
     else if(soma > N_sns - 0.5) erro = 111111;
     else /*if(soma != 0)*/{
         erro /= soma;
-        erro = atan(erro/125.4);
+        erro = atan(erro/127.5);
         erro *= 57.29578;
     }
-    erro_antigo = erro;
-    if(abs(erro) > 1) erro_antigo_alto = erro; 
+    if((erro > 0 && erro_antigo == -30) || (erro < 0 && erro_antigo == 30)) erro = erro_antigo;
+    else {
+        if(erro != 111111) erro_antigo = erro;
+        if(abs(erro) > 1) erro_antigo_alto = erro; 
+    }
 	return erro;
 }
 
 int sensores_frontais::get_N_sns(){
 	return N_sns;
 }
+float sensores_frontais::get_erro_antigo(){
+	return erro_antigo;
+}
+
+
 
 void sensores_frontais::ler_sensor(int n, bool fast){
+    if(n >= N_sns) return;
     if(!fast)sensores[n].ler();
     else sensores[n].ler_fast();
     

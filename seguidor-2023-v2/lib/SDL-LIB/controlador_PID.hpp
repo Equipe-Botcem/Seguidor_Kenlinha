@@ -36,6 +36,7 @@ private:
     int mapa[T_mapa] = {0};
 public:
     void corrigir_trajeto(float erro, motor * m_dir, motor * m_esq);
+    void corrigir_trajeto_sem_mover(float erro, motor * m_dir, motor * m_esq);
     void prox_secao();
     void encontrar_linha(float erro, motor * m_dir, motor * m_esq, char lado);
 

@@ -17,7 +17,7 @@ void Seguidor_de_Linha::ControlCMD(String command)
 		set_Consts(command);
 		break;
 	case STOP:
-		stop();
+		stop("Controle");
 		break;
 	case RUN:
 		run();
@@ -104,21 +104,23 @@ void Seguidor_de_Linha::set_Consts(String valores)
 	send_Consts();
 }
 
-void Seguidor_de_Linha::stop()
+void Seguidor_de_Linha::stop(String agente)
 {
 	set_direcao('B');
 	modo = 'B';
 	ler_sensores_fast = true;
+	ler_sensores_sem_pausa = false;
 	send_Consts();
 	Serial.println("Tempo: " + (String)(millis() - start_time));
+	Serial.println("Agente: " + agente);
 	Controlador.reset();
 	Estado_corrida = false;
 }
 
 void Seguidor_de_Linha::run()
 {
-	//delay(4000);
-	ler_sensores_fast = true;
+	//delay(4te000);
+	ler_sensores_fast =true;
 	ler_sensores_sem_pausa = true;
 	ADCSRA |= (1 << ADSC);
 	delay(10);
@@ -127,7 +129,7 @@ void Seguidor_de_Linha::run()
 	set_direcao('F');
 	modo = 'N';
 	tempo = 0;
-	
+	tmp_fora_linha = 0;
 	estado_s_chegada = 0;
 	estado_s_mapa = 0;
 	curva_time = 0;
@@ -136,8 +138,9 @@ void Seguidor_de_Linha::run()
 	curva_time = 0;
 	qnt_linhas = 2;
 	
-	Estado_corrida = true;
 	Controlador.reset();
+	Estado_corrida = true;
+	
 }
 
 
