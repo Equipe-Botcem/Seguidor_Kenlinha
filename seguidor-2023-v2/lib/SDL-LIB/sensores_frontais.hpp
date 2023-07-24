@@ -9,7 +9,7 @@ private:
     float erro_antigo = 0;
 	float erro_antigo_alto = 0;
 	char obj_centralizado = 'C';
-	float percent[N_sns] = {0,0,0,0};//,0,0};
+	//float percent[N_sns] = {0,0,0,0};//,0,0};
 public:
 
 	sensor sensores[N_sns];

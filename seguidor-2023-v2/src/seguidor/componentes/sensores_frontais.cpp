@@ -24,7 +24,7 @@ float sensores_frontais::erro_analogico(){
         if(valor > maior) maior = valor;
         if(valor < menor) menor = valor;
     }
-    Serial.println("Diferença: " + (String)(maior - menor));
+    //Serial.println("Diferença: " + (String)(maior - menor));
     if(soma < 1.5 && (maior - menor < tolerancia)) erro = 30 * (erro_antigo_alto > 0 ? 1:-1);
     else if(soma > N_sns - 0.5) erro = 111111;
     else{
