@@ -9,9 +9,6 @@ private:
     int valor_max_lido;
     int valor_min_lido;
     float dead_percent;
-
-    #define N_dados 30
-    int media_movel[N_dados];
 public:
     sensor();
 

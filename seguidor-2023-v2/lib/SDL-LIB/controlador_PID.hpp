@@ -7,9 +7,12 @@ class controlador_PID
 private:
     int vel_max = 255;
     int vel_min = -255;
-    float Kp = 25;
+    /*float Kp = 25;
     float Ki = 0.0170968;
-    float Kd = 1642;
+    float Kd = 1642;*/
+    float Kp = 25;
+    float Ki = 2.6899;
+    float Kd = 2500.4;
 
     unsigned long tmp_passado = 0;
 

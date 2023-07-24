@@ -21,7 +21,8 @@ Seguidor_de_Linha::Seguidor_de_Linha()
 }
 //funcao para seguir a linha
 float Seguidor_de_Linha::seguir_linha(){
-	float erro = Kalman.updateEstimate(sns_frontais.erro_analogico());
+	float erro = sns_frontais.erro_analogico();
+	float erro_filtrado = Kalman.updateEstimate(erro);
 	//float erro = sns_frontais.erro_analogico();
 
 	if(erro == 111111){
@@ -30,14 +31,14 @@ float Seguidor_de_Linha::seguir_linha(){
 		}
 		estado_s_chegada = 2;
 		estado_s_mapa = 2;
-		erro = 0;
+		erro_filtrado = 0;
 	}
-	else if(abs(erro) < 3){
+	else if(abs(erro_filtrado) < 5){
 		checar_chegada();
 		//checar_secao();
 	}
 	else{
-		if(abs(erro) > 20){
+		if(abs(erro) == 90){
 			if(tmp_fora_linha == 0) tmp_fora_linha = millis();
 			else if(millis() - tmp_fora_linha > 1000){
 				stop("Muito tempo fora da linha");
@@ -47,9 +48,9 @@ float Seguidor_de_Linha::seguir_linha(){
 		//if(Controlador.get_controle_secao() == 1) Controlador.prox_secao();
 		curva_time = millis();
 	}
-	checar_chegada(); 
 	ADCSRA |= (1 << ADSC);
-	Controlador.corrigir_trajeto(erro,&motor_dir, &motor_esq);
+	if(abs(erro) == 90) Controlador.corrigir_trajeto(erro,&motor_dir, &motor_esq);
+	else Controlador.corrigir_trajeto(erro_filtrado,&motor_dir, &motor_esq);
 	return erro;
 }
 

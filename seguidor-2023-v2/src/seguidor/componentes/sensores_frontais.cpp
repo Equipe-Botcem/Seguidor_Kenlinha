@@ -8,25 +8,33 @@ float sensores_frontais::erro_analogico(){
     float soma = 0;
 
     float valor = 0;
+    float menor = 1, maior = 0;
 	for(int i = 0; i < N_sns/2; i++){
         valor = sensores[i].get_ult_leitura_percent();
         erro += - valor * ((N_sns/2-1-i)*8 + 4.6); //distancia dos sensores ao centro da pcb vermelha
         soma += valor;
+        //percent[i] = valor;
+        if(valor > maior) maior = valor;
+        if(valor < menor) menor = valor;
 
         valor = sensores[i+N_sns/2].get_ult_leitura_percent();
         erro += valor * ((i)*8 + 4.6);
         soma += valor;
+        //percent[i+N_sns/2] = valor;
+        if(valor > maior) maior = valor;
+        if(valor < menor) menor = valor;
     }
-    if(soma == 0) erro = 30 * (erro_antigo_alto > 0 ? 1:-1);
+    Serial.println("Diferença: " + (String)(maior - menor));
+    if(soma < 1.5 && (maior - menor < tolerancia)) erro = 30 * (erro_antigo_alto > 0 ? 1:-1);
     else if(soma > N_sns - 0.5) erro = 111111;
-    else /*if(soma != 0)*/{
+    else{
         erro /= soma;
-        erro = atan(erro/127.5);
+        erro = atan(erro/100);
         erro *= 57.29578;
     }
-    if((erro > 0 && erro_antigo == -30) || (erro < 0 && erro_antigo == 30)) erro = erro_antigo;
-    else {
-        if(erro != 111111) erro_antigo = erro;
+
+    if(erro != 111111) {
+        erro_antigo = erro;
         if(abs(erro) > 1) erro_antigo_alto = erro; 
     }
 	return erro;

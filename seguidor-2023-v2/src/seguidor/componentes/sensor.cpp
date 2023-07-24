@@ -4,7 +4,7 @@
 sensor::sensor()
 {
     ultima_leitura = -1; valor_max_lido = -1; valor_min_lido = 1024;
-    pin_dado = -1; dead_percent = 0.102;
+    pin_dado = -1; dead_percent = 0;
 }
 int sensor::ler(){
     ultima_leitura = 1023 - analogRead(pin_dado);
