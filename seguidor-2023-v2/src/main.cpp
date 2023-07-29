@@ -82,7 +82,7 @@ ISR(ADC_vect) {
 		CEMLinha.sensor_chegada.ler();
 	}
 	else if(cont_sns == 7){
-		//CEMLinha.sensor_mapa.ler();
+		CEMLinha.sensor_mapa.ler();
 	}
 	else{
 		CEMLinha.sns_frontais.ler_sensor(cont_sns, CEMLinha.ler_sensores_fast);
@@ -113,13 +113,14 @@ SimpleKalmanFilter kf = SimpleKalmanFilter(0.008,0.01,0.008);
 
 void loop()
 {
+	#ifndef TESTE_SENSOR
 	if (CEMLinha.Estado_corrida == true){
 		CEMLinha.seguir_linha();
 	}
 	else if(CEMLinha.get_modo() != 'B' && (CEMLinha.get_modo() != 'J')){
 		CEMLinha.stop("Loop");
 	}
-
+	#endif
 	#ifdef TESTE_CTRL
 	volatile float erro_anl = CEMLinha.sns_frontais.erro_analogico();
 	volatile float corr = control_teste.get_correcao(erro_anl);
@@ -127,7 +128,7 @@ void loop()
 
 	// Teste 
 	#ifdef TESTE_SENSOR
-	if(millis() - tmp_mili > 10){
+	if(millis() - tmp_mili > 500){
 		
 		tmp_mili = millis();
 		//Serial.println((int)(cont/8));

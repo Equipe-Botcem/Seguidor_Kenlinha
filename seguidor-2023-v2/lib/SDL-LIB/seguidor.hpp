@@ -34,8 +34,8 @@ class Seguidor_de_Linha
         char direcao_atual = 'F';
         char lado_pista = 'D';
 
-        int pinos[14] = {A1,A2,A3,A4,A0,A5, //Sensores frontais
-                        A6, A7, 6, 9, 10, 5, 8, 7};
+        int pinos[14] = {A0,A1,A2,A3,A4,A5, //Sensores frontais
+                        A6, A7, 6, 10, 9, 5, 7, 8};
                         
     public:
         

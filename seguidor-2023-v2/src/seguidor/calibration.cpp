@@ -2,7 +2,7 @@
 
 int Seguidor_de_Linha::sensor_calib(int pos){
 
-	//vel_calib = 160;
+	vel_calib = 100;
 	// pos = 0: sensores frontais em qualquer lugar na frente da linha branca
 	// pos = 1: sensores laterais
 	if (pos == 0){
@@ -12,7 +12,7 @@ int Seguidor_de_Linha::sensor_calib(int pos){
 		set_direcao('T');
 		set_velocidade(vel_calib,vel_calib);
 		long cont_tolerancia = millis();
-		while (!sns_frontais.comp_max_value(3 * sns_frontais.get_min_media()) && (millis() - cont_tolerancia < 1500)){
+		while (!sns_frontais.comp_max_value(8 * sns_frontais.get_min_media()) && (millis() - cont_tolerancia < 1500)){
 			delay(1);
 		}
 		
@@ -40,23 +40,23 @@ int Seguidor_de_Linha::sensor_calib(int pos){
 		set_direcao('F');
 		set_velocidade(vel_calib,vel_calib);
 		long cont_tolerancia = millis();
-		while(sensor_chegada.get_max_leitura() < 2 * sensor_chegada.get_min_leitura() && (millis() - cont_tolerancia < 1500)){
+		while(sensor_chegada.get_max_leitura() < 1.5 * sensor_chegada.get_min_leitura() && (millis() - cont_tolerancia < 1500)){
 			delay(1);
 		}
 		if((millis() - cont_tolerancia) >= 1500){
 			stop("Timeout: Calibração Sensor chegada");
 			return 0;
 		}
-		/*while(sensor_mapa.get_max_leitura() < 2 * sensor_mapa.get_min_leitura()){
+		while(sensor_mapa.get_max_leitura() < 2 * sensor_mapa.get_min_leitura()){
 			delay(1);
-		}*/
+		}
 		set_direcao('B');
 		set_velocidade(0,0);
 		
 		delay(50);
 
-		MAX_PRETO_CHEGADA = sensor_chegada.calc_limite(2);
-		//MAX_PRETO_MAPA = sensor_mapa.calc_limite();
+		MAX_PRETO_CHEGADA = sensor_chegada.calc_limite(1.5);
+		MAX_PRETO_MAPA = sensor_mapa.calc_limite(1.5);
 
 	}
 	return 1;

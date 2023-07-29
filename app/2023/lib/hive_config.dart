@@ -31,7 +31,9 @@ class HiveConfig{
     consts.put("VEL_MIN", options[3]);
     consts.put("VEL_MAX", options[4]);
     consts.put("TMP_FORA", options[5]);
-    consts.put("MAPA", options[6]);
+    consts.put("K", options[6]);
+    consts.put("TOL", options[7]);
+    consts.put("MAPA", options[8]);
     return true;
   }
 

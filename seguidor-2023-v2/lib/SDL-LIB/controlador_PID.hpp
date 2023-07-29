@@ -5,16 +5,18 @@
 class controlador_PID
 {
 private:
-    int vel_max = 255;
-    int vel_min = -255;
+    int vel_max = 200;
+    int vel_min = -200;
     /*float Kp = 25;
     float Ki = 0.0170968;
     float Kd = 1642;*/
+    float K = 0.01;//3;
     float Kp = 25;
-    float Ki = 2.6899;
-    float Kd = 2500.4;
+    float Ki = 3;//2.6899;
+    float Kd = 1500.4;//2500.4;
 
     unsigned long tmp_passado = 0;
+    unsigned long tmp_ignorar = 0;
 
     float erro_P = 0;
 
@@ -22,6 +24,7 @@ private:
     float erro_antigo_I = 0;
     unsigned long tempo_acumulo = 10;
     unsigned long tempo_ult_atualizacao = 0;
+    
 
     float erro_D = 0;
     float erro_antigo = 0;
@@ -33,7 +36,12 @@ private:
     float LKi = 13;
     float LKd = 50;
 
+    unsigned long tmp_last_curva = 0;
+    float maior_erro_curva = 0;
+    unsigned long tmp_last_reta=0;
     const static int T_mapa = 40;
+    bool estado = false;
+    float erro_perda = 0;
     int secao_atual = 0;
     bool seguir_mapa = false;
     int mapa[T_mapa] = {0};
@@ -45,7 +53,7 @@ public:
 
     void set_vel(int v_max, int v_min);
 
-    void set_const(float _kp, float _ki, float _kd);
+    void set_const(float _kp, float _ki, float _kd, float _k);
     void set_const_L(float _kp, float _ki, float _kd);
     void set_mapa(int * _mapa, int tam);
     void set_estado_mapa(bool _bool);
@@ -57,7 +65,9 @@ public:
     void get_vel(int * vetor);
     
     bool get_estado_mapa();
+    float get_erro_perda();
     int get_secao();
+    bool get_estado_secao();
     int get_controle_secao();
     float get_erro_antigo();
 

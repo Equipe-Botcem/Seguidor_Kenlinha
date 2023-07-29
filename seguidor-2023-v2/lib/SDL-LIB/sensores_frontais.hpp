@@ -4,12 +4,15 @@
 class sensores_frontais
 {
 private:
-	const static int N_sns = 4;
-	const float tolerancia = 0.2;
+	const static int N_sns = 6;
+	float tolerancia = 0.3;
     float erro_antigo = 0;
+	float erro_antigo2 = 0;
+	float erro_perda = 0;
 	float erro_antigo_alto = 0;
+	unsigned long tmp_ignorar = 0;
 	char obj_centralizado = 'C';
-	//float percent[N_sns] = {0,0,0,0};//,0,0};
+	float percent[N_sns] = {0,0,0,0};//,0,0};
 public:
 
 	sensor sensores[N_sns];
@@ -17,10 +20,12 @@ public:
 
     sensores_frontais();
 	void set_pinos(int pins[]);
+	void set_tol(float tol);
 	void reset();
 
 	float erro_analogico();
     
+	float get_tol();
 	int get_N_sns();
 	float get_erro_antigo();
 	float get_media();

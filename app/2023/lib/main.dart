@@ -56,6 +56,8 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   final TextEditingController VEL_MIN = TextEditingController();
   final TextEditingController TMP_FORA = TextEditingController();
   final TextEditingController MAPA = TextEditingController();
+  final TextEditingController K = TextEditingController();
+  final TextEditingController TOL = TextEditingController();
 
   //Constantes recebidas robo
   static String KI_robot = "";
@@ -64,6 +66,8 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   static String VEL_MAX_robot = "";
   static String VEL_MIN_robot = "";
   static String TMP_FORA_robot = "";
+  static String K_robot = "";
+  static String TOL_robot = "";
   static bool USE_MAP = false;
 
   //Hive
@@ -303,6 +307,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     if(typeCMD == "S"){
       cmd = "S: KP" + KP.text + ",KI" + KI.text + ",KD" + KD.text +
       ",VLMIN" + VEL_MIN.text + ",VLMAX" + VEL_MAX.text + ",TMPFR" + TMP_FORA.text
+      + ",K" + K.text + ",TOL" + TOL.text
       + ",USARMAPA" + (USE_MAP == true ? "1" : "0") + ",MAPA" + mapa.text;
     }
     else if(typeCMD == "R") 
@@ -338,6 +343,8 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
       VEL_MIN.text = nums[3];
       VEL_MAX.text = nums[4];
       TMP_FORA.text = nums[5];
+      K.text = nums[6];
+      TOL.text = nums[7];
     }
     KP_robot = nums[0];
     KI_robot = nums[1];
@@ -345,11 +352,13 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     VEL_MIN_robot = nums[3];
     VEL_MAX_robot = nums[4];
     TMP_FORA_robot = nums[5];
-    if(nums[6] == "1") {
+    K_robot = nums[6];
+    TOL_robot = nums[7];
+    if(nums[8] == "1") {
       USE_MAP = true;
     }
     else {USE_MAP = false;}
-    mapa.text = nums[7];
+    mapa.text = nums[9];
     setState((){});
   }
 
@@ -358,7 +367,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   void saveConsts() async{
 
     
-    List<String> ops = [KP.text, KI.text, KD.text, VEL_MIN.text, VEL_MAX.text, TMP_FORA.text, mapa.text];
+    List<String> ops = [KP.text, KI.text, KD.text, VEL_MIN.text, VEL_MAX.text, TMP_FORA.text, K.text, TOL.text, mapa.text];
     
     TextEditingController boxName = TextEditingController();
     Widget cancelButton = TextButton( 
@@ -468,6 +477,8 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
         VEL_MIN.text = consts.get("VEL_MIN") ?? "";
         VEL_MAX.text = consts.get("VEL_MAX") ?? "";
         TMP_FORA.text = consts.get("TMP_FORA") ?? "";
+        K.text = consts.get("K") ?? "";
+        TOL.text = consts.get("TOL") ?? "";
         mapa.text = consts.get("MAPA") ?? "";
       }
     }); 
@@ -566,11 +577,13 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
                 campoConst("KP", KP, vlAtual: KP_robot),
                 campoConst("KI", KI, vlAtual: KI_robot),
                 campoConst("KD", KD, vlAtual: KD_robot),
+                campoConst("K", K, vlAtual: K_robot),
               ]),
               colunaMetadeTela([
                 campoConst("VEL MAX", VEL_MAX, vlAtual: VEL_MAX_robot),
                 campoConst("VEL MIN", VEL_MIN, vlAtual: VEL_MIN_robot),
                 campoConst("TMP FORA", TMP_FORA, vlAtual: TMP_FORA_robot),
+                campoConst("TOL", TOL, vlAtual: TOL_robot),
               ]),
               //ElevatedButton(onPressed: () => {serial.text += "\n\n\n\n\n\n\n\n\n\n\n\nTeste"}, child: Text("Testar Serial"))
             ],

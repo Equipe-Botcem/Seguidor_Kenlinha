@@ -46,14 +46,15 @@ void Seguidor_de_Linha::ControlCMD(String command)
 
 void Seguidor_de_Linha::send_Consts(){
 
-	float constsPID[3]; Controlador.get_const(constsPID);
+	float constsPID[4]; Controlador.get_const(constsPID);
 
-	float Kp = constsPID[0], Ki = constsPID[1], Kd = constsPID[2];
+	float Kp = constsPID[0], Ki = constsPID[1], Kd = constsPID[2], K = constsPID[3];
 	
 	int vels[2]; Controlador.get_vel(vels);
 
 	int vel_max = vels[0];
 	int vel_min = vels[1];
+	float TOL = sns_frontais.get_tol();
 	/*String Str_mapa = "";
 	int mapa[40] = {0}; Controlador.get_mapa(mapa);
 	for (int i =0; i < 40; i++){
@@ -67,6 +68,8 @@ void Seguidor_de_Linha::send_Consts(){
 	Serial.print(vel_min);  	Serial.print("|");
 	Serial.print(vel_max);   	Serial.print("|");
 	Serial.print(TMP_calib); 	Serial.print("|");
+	Serial.print(K); 			Serial.print("|");
+	Serial.print(TOL); 			Serial.print("|");
 	Serial.print(Controlador.get_estado_mapa() ? "Seguindo" : "Nao seguindo"); 	Serial.print("|");
 	Serial.print("Mapa"); 	Serial.print("|");
 	
@@ -94,11 +97,12 @@ void Seguidor_de_Linha::set_Consts(String valores)
 	}
 	dados[cont] = dados_texto[cont].toDouble();
 	
-	Controlador.set_const(dados[0], dados[1], dados[2]); //KP,KI,KD
+	Controlador.set_const(dados[0], dados[1], dados[2], dados[6]); //KP,KI,KD
 	Controlador.set_vel(dados[4], dados[3]);
 	TMP_calib = dados[5];
+	sns_frontais.set_tol(dados[7]);
 
-	Controlador.set_estado_mapa(dados[6] == 1 ? true : false);
+	Controlador.set_estado_mapa(dados[8] == 1 ? true : false);
 	Controlador.reset();
 	delay(200);
 	send_Consts();
@@ -113,6 +117,7 @@ void Seguidor_de_Linha::stop(String agente)
 	send_Consts();
 	Serial.println("Tempo: " + (String)(millis() - start_time));
 	Serial.println("Agente: " + agente);
+	Serial.println("Secao: " + (String)Controlador.get_secao());
 	Controlador.reset();
 	Estado_corrida = false;
 }
@@ -136,26 +141,31 @@ void Seguidor_de_Linha::run()
 	start_time = 0;
 	
 	curva_time = 0;
-	qnt_linhas = 2;
+	qnt_linhas = 2;//10
 	
 	Controlador.reset();
 	Estado_corrida = true;
 	
 }
 
-
+/**/
 void Seguidor_de_Linha::teste_frontal(){
 	double soma = 0;
 	
+	ler_sensores_fast = false;
 	ler_sensores_sem_pausa = true;
 	ADCSRA |= (1 << ADSC);
 	delay(50);
 	ler_sensores_sem_pausa = false;
+	ler_sensores_fast = true;
 	int n_sensores = sns_frontais.get_N_sns();
 	for (int i = 0; i < n_sensores; i++)
 	{
 		soma += sns_frontais.sensores[i].get_ult_leitura();
-		Serial.println((String)i + " - " + (String)sns_frontais.sensores[i].get_ult_leitura());
+		Serial.println((String)i + " - " + (String)sns_frontais.sensores[i].get_ult_leitura() +
+		" - Min: " + (String)sns_frontais.sensores[i].get_min_leitura() + 
+		" - Max: " + (String)sns_frontais.sensores[i].get_max_leitura() + 
+			+ " - " + (String)(int)(sns_frontais.sensores[i].get_ult_leitura_percent()*100) + "%");
 	}
 
 	Serial.print("Resultado teste frontal: ");
