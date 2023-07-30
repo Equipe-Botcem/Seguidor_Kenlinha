@@ -3,7 +3,7 @@
 void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
 {
     if(abs(erro) > abs(maior_erro_curva)) maior_erro_curva = erro;
-    if((abs(erro) > 3) && (estado == false)) prox_secao();
+    if((abs(erro) > 5) && (estado == false)) prox_secao();
     else if((abs(erro) < 0.5)  && (estado == true) && (abs(maior_erro_curva) >= 3)) prox_secao();
 
     if(abs(erro_antigo) != 30 && (abs(erro) == 30)){
@@ -15,7 +15,7 @@ void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
     float PID = get_correcao(erro);
     int v_max = vel_max;
     float _K = (micros()  - tmp_last_reta) * K/1000.00;
-    if(estado) v_max = vel_max - _K * abs(erro - erro_perda);
+    if(estado) v_max = vel_max - _K;
     if(vel_max < 40) vel_max = 40;
     if(PID >= 0){
         float vel_corrigida = v_max - PID;

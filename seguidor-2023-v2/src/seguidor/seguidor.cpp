@@ -36,7 +36,7 @@ float Seguidor_de_Linha::seguir_linha(){
 		erro_filtrado = 0;
 	}
 	else if(abs(erro_filtrado) < 10){
-		checar_chegada();
+		
 		
 	}
 	else{
@@ -50,6 +50,7 @@ float Seguidor_de_Linha::seguir_linha(){
 		//if(Controlador.get_controle_secao() == 1) Controlador.prox_secao();
 		curva_time = millis();
 	}
+	checar_chegada();
 	checar_secao();
 	ADCSRA |= (1 << ADSC);
 	if(abs(erro) == 30) Controlador.corrigir_trajeto(erro,&motor_dir, &motor_esq);
@@ -103,10 +104,10 @@ void Seguidor_de_Linha::set_velocidade_fast(int vel_dir, int vel_esq){
 
 void Seguidor_de_Linha::checar_chegada()
 {
-	if (sensor_chegada.get_ult_leitura() >= MAX_PRETO_CHEGADA && (millis() - curva_time > 10))
+	if (sensor_chegada.get_ult_leitura() >= MAX_PRETO_CHEGADA)
 	{
 		if(estado_s_chegada == 0){
-			if(qnt_linhas != 1 || (millis() - start_time >= 30000)) qnt_linhas--;
+			if(qnt_linhas != 1 || ((millis() - start_time) >= TMP_calib)) qnt_linhas--;
 			Serial.println("qnt_linha: " + (String)qnt_linhas);
 			if (qnt_linhas == 0){
 				stop("Sensor Chegada");
