@@ -12,7 +12,7 @@ private:
 public:
     sensor();
 
-    int calc_limite(int fator);
+    int calc_limite(float fator);
     int ler();
     int ler_fast();
     void reset();

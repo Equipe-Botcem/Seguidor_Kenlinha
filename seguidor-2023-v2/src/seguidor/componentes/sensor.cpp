@@ -17,7 +17,7 @@ int sensor::ler_fast(){
     ultima_leitura = 1023 - analogRead(pin_dado);
     return ultima_leitura;
 }
-int sensor::calc_limite(int fator){
+int sensor::calc_limite(float fator){
     if(fator == 0) fator = 1;
     return (valor_max_lido - valor_min_lido)/fator + valor_min_lido;
 }
