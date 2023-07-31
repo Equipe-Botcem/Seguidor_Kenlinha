@@ -1,37 +1,38 @@
+// Inclui as bibliotecas do Arduino e a classe motor.
 #include "Arduino.h"
 #include "motor.hpp"
+
+// Garante que a biblioteca não seja incluída mais de uma vez.
 #ifndef CTRLR_PID_H
 #define CTRLR_PID_H
+
+// Define a classe controlador_PID.
 class controlador_PID
 {
 private:
+    // Variáveis privadas para armazenar parâmetros do controlador PID e outros estados.
     int vel_max = 150;
     int vel_min = -150;
-    /*float Kp = 25;
-    float Ki = 0.0170968;
-    float Kd = 1642;*/
-    float K = 0.00;//3;
+    float K = 0.00;
     float Kp = 25;
-    float Ki = 3;//2.6899;
-    float Kd = 1500.4;//2500.4;
+    float Ki = 3;
+    float Kd = 1500.4;
 
     unsigned long tmp_passado = 0;
     unsigned long tmp_ignorar = 0;
 
     float erro_P = 0;
-
     float erro_I = 0;
     float erro_antigo_I = 0;
     unsigned long tempo_acumulo = 10;
     unsigned long tempo_ult_atualizacao = 0;
     
-
     float erro_D = 0;
     float erro_antigo = 0;
     
     float corr_old = 0;
 
-    //Mapeamento
+    // Variáveis para mapeamento.
     float LKp = 15;
     float LKi = 13;
     float LKd = 50;
@@ -45,7 +46,9 @@ private:
     int secao_atual = 0;
     bool seguir_mapa = false;
     int mapa[T_mapa] = {0};
+
 public:
+    // Métodos públicos para controlar a trajetória, ajustar parâmetros, obter estados, etc.
     void corrigir_trajeto(float erro, motor * m_dir, motor * m_esq);
     void corrigir_trajeto_sem_mover(float erro, motor * m_dir, motor * m_esq);
     void prox_secao();
@@ -77,4 +80,6 @@ public:
 
     void reset();
 };
+
+// Fecha a definição de prevenção de dupla inclusão.
 #endif
