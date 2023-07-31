@@ -11,20 +11,21 @@ float sensores_frontais::erro_analogico(){
     float menor = 1, maior = 0;
     //Ideias: tirar sempre o menor percentual de todos os outros; diferenciar apenas quando a diferença deste para o menor for de +20%;
 	
+    int cont_maior_50 = 0;
     for(int i = 0; i < N_sns; i++){
         percent[i] = sensores[i].get_ult_leitura_percent();
         if(percent[i] > maior) maior = percent[i];
         if(percent[i] < menor) menor = percent[i];
+        if(percent[i] > 0.5) cont_maior_50++;
     }
     
     int ultimo_branco = -1;
+    
+    if(cont_maior_50 >= 4) return 111111;
     if(maior - menor < tolerancia){
-        if(maior > 0.5) return 111111;
-        else {
-            if(abs(erro_antigo) != 30) tmp_ignorar = micros();
-            erro_antigo = (erro_antigo_alto > 0 ? 1 : -1) * 30;
-            return erro_antigo;
-        }
+        if(abs(erro_antigo) != 30) tmp_ignorar = micros();
+        erro_antigo = (erro_antigo_alto > 0 ? 1 : -1) * 30;
+        return erro_antigo;
     }
     else{
         for(int i = 0; i < N_sns; i++){

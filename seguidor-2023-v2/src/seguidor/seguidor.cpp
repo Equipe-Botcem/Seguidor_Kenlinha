@@ -28,30 +28,22 @@ float Seguidor_de_Linha::seguir_linha(){
 	//float erro = sns_frontais.erro_analogico();
 
 	if(erro == 111111){
-		/*if(sensor_chegada.get_ult_leitura() >= MAX_PRETO_CHEGADA){
-			stop("Todos no branco");
-		}*/
+		//Serial.println("encruzilhada");
 		estado_s_chegada = 2;
 		estado_s_mapa = 2;
 		erro_filtrado = 0;
 	}
 	else if(abs(erro_filtrado) < 10){
 		
-		
 	}
 	else{
-		/*if(abs(erro) == 30){
-			if(tmp_fora_linha == 0) tmp_fora_linha = millis();
-			else if(millis() - tmp_fora_linha > 3000){
-				stop("Muito tempo fora da linha");
-				tmp_fora_linha = 0;
-			}
-		}else tmp_fora_linha = 0;*/
-		//if(Controlador.get_controle_secao() == 1) Controlador.prox_secao();
 		curva_time = millis();
 	}
-	checar_chegada();
-	checar_secao();
+	if(TMP_calib != 0)checar_chegada();
+	//checar_secao();
+	if(millis() - start_time >= Controlador.get_K() && (Controlador.get_K() != 0)){
+		stop("Tempo Limite");
+	}
 	ADCSRA |= (1 << ADSC);
 	if(abs(erro) == 30) Controlador.corrigir_trajeto(erro,&motor_dir, &motor_esq);
 	else Controlador.corrigir_trajeto(erro_filtrado,&motor_dir, &motor_esq);
@@ -107,7 +99,11 @@ void Seguidor_de_Linha::checar_chegada()
 	if (sensor_chegada.get_ult_leitura() >= MAX_PRETO_CHEGADA)
 	{
 		if(estado_s_chegada == 0){
-			if(qnt_linhas != 1 || ((millis() - start_time) >= TMP_calib)) qnt_linhas--;
+			if(qnt_linhas > 1 || ((millis() - start_time) >= TMP_calib)) qnt_linhas--;
+			else{
+				estado_s_chegada = 1;
+				return;
+			}
 			Serial.println("qnt_linha: " + (String)qnt_linhas);
 			if (qnt_linhas == 0){
 				stop("Sensor Chegada");

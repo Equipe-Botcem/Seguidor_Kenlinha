@@ -71,6 +71,8 @@ public:
     int get_controle_secao();
     float get_erro_antigo();
 
+    int get_K();
+
     float get_correcao(float erro, bool att = true);
 
     void reset();

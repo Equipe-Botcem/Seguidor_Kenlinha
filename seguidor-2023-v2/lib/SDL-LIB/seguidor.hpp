@@ -45,7 +45,7 @@ class Seguidor_de_Linha
         bool ler_sensores_sem_pausa = false;
         bool ler_sensores_fast = false;
 
-        unsigned long TMP_calib = 15;
+        unsigned long TMP_calib = 30000;
         unsigned long tempo = TMP_calib;
         bool Estado_corrida = false;
 
