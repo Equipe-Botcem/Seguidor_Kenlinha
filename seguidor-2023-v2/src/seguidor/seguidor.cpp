@@ -25,7 +25,6 @@ Seguidor_de_Linha::Seguidor_de_Linha()
 float Seguidor_de_Linha::seguir_linha(){
 	float erro = sns_frontais.erro_analogico();
 	float erro_filtrado = Kalman.updateEstimate(erro);
-	//float erro = sns_frontais.erro_analogico();
 
 	if(erro == 111111){
 		//Serial.println("encruzilhada");
@@ -33,17 +32,12 @@ float Seguidor_de_Linha::seguir_linha(){
 		estado_s_mapa = 2;
 		erro_filtrado = 0;
 	}
-	else if(abs(erro_filtrado) < 10){
-		
-	}
 	else{
 		curva_time = millis();
 	}
-	if(TMP_calib != 0)checar_chegada();
-	//checar_secao();
-	if(millis() - start_time >= Controlador.get_K() && (Controlador.get_K() != 0)){
-		stop("Tempo Limite");
-	}
+	
+	checar_chegada();
+	checar_secao();
 	ADCSRA |= (1 << ADSC);
 	if(abs(erro) == 30) Controlador.corrigir_trajeto(erro,&motor_dir, &motor_esq);
 	else Controlador.corrigir_trajeto(erro_filtrado,&motor_dir, &motor_esq);
@@ -99,19 +93,15 @@ void Seguidor_de_Linha::checar_chegada()
 	if (sensor_chegada.get_ult_leitura() >= MAX_PRETO_CHEGADA)
 	{
 		if(estado_s_chegada == 0){
-			if(qnt_linhas > 1 || ((millis() - start_time) >= TMP_calib)) qnt_linhas--;
-			else{
-				estado_s_chegada = 1;
-				return;
-			}
-			Serial.println("qnt_linha: " + (String)qnt_linhas);
-			if (qnt_linhas == 0){
-				stop("Sensor Chegada");
-			}
-			else if(qnt_linhas == 1){
-				start_time = millis();
-			}
-			estado_s_chegada = 1;
+			if(marcacoes_chegada == 0) start_time = millis();
+
+			if(qnt_linhas > 1) qnt_linhas--;
+			else if(((millis() - start_time) >= TMP_calib)) stop("Sensor Chegada");
+			else estado_s_chegada = 1;
+			marcacoes_chegada++;
+
+			Serial.println("Linhas de Chegada faltando: " + (String)qnt_linhas +
+							"\nMarcacoes lidas: " + String(marcacoes_chegada));
 		}
 		else if(estado_s_chegada == 2) estado_s_chegada = 1;
 		

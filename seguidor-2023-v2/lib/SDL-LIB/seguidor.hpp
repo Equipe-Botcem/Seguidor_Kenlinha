@@ -30,6 +30,8 @@ class Seguidor_de_Linha
         //-------------------//
         unsigned long tmp_fora_linha = 0;
         int qnt_linhas = 2;
+        int marcacoes_secao = 0;
+        int marcacoes_chegada = 0;
         unsigned long curva_time = 0;
         char direcao_atual = 'F';
         char lado_pista = 'D';
