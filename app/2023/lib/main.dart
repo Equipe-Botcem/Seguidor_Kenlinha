@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'dart:convert';
+import 'package:flutter/services.dart';
 import 'package:controle/hive_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
@@ -11,6 +12,8 @@ import 'package:flutter_joystick/flutter_joystick.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations(
+    [DeviceOrientation.portraitUp]);
   await HiveConfig.start();
   runApp(const MainApp());
 }
@@ -77,6 +80,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   double _x = 0, _y = 0, step = 100;
 
   bool initial = true;
+  bool atual_const = false;
   MainPageState(){
     if(!initial) setState((){});
     initial = false;
@@ -184,6 +188,20 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
 
   Container campoConst(String nome, TextEditingController ctrl, {String vlAtual = "", int flex = 1}){
     double sfont = 18;
+    if(atual_const){
+      return Container(margin: EdgeInsets.only(bottom: 5), padding: EdgeInsets.all(8), decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Color.fromRGBO(0, 0, 0, 1)), child:
+      Column( children:[
+        Container(
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(30),color: corBotAzul,),
+          margin: EdgeInsets.all(8),
+          padding: EdgeInsets.all(3),
+          
+          width: double.infinity,
+          child: Text(" $nome: $vlAtual", style: TextStyle(fontSize: 18),),
+        ),
+      ])
+    );
+    }
     return Container(margin: EdgeInsets.only(bottom: 5), padding: EdgeInsets.all(8), decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Color.fromRGBO(0, 0, 0, 1)), child:
       Column( children:[
         Row(
@@ -212,14 +230,15 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
           padding: EdgeInsets.all(3),
           
           width: double.infinity,
-          child: Text("Atual: $vlAtual", style: TextStyle(fontSize: 18),),
+          child: Text(" Atual: $vlAtual", style: TextStyle(fontSize: 18),),
         ),
       ])
     );
   }
 
-  Expanded fillButton(Function onpressed, Widget child, double borderRadius){
+  Expanded fillButton(Function onpressed, Widget child, double borderRadius, {int f = 1}){
     return Expanded( 
+      flex: f,
       child: ElevatedButton(
         onPressed: () => onpressed(),
         style: ElevatedButton.styleFrom(
@@ -269,7 +288,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
 
   void readBLE(data){
     data = ascii.decode(data);
-    serial.text += "\n${data.toString()} ;;; ";
+    serial.text += "\n${data.toString()}";
     if(data.toString()[0] == "T"){
       receiveConsts(data.toString());
     }
@@ -530,6 +549,20 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   //Tabs
   
   Tab bluetoothTab(){
+    Icon expandir = Icon(Icons.arrow_circle_down);
+    Widget mapa = Padding(padding: EdgeInsets.all(0));
+    if(!atual_const) {
+      expandir = Icon(Icons.arrow_circle_up);
+      mapa = Padding(
+            padding: EdgeInsets.all(8),
+            child: CheckboxListTile(
+              value: USE_MAP,
+              shape: Border.all(),
+              onChanged: (value) => setState((){USE_MAP = (value ?? false);}),
+              title: Text("Usar Mapa"),
+            )
+          );
+    }
     List<Widget> elementos = [
         Column(children: [
           //Serial textfield
@@ -562,7 +595,9 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
           Padding(
             padding: EdgeInsets.all(8),
             child: Row( children: [
+              IconButton(onPressed: () => sendCMD("T"), icon: Icon(Icons.settings), iconSize: 30,),
               fillButton( () => sendCMD("C"), Text("CALIBRAÇÃO", style: TextStyle(fontSize: 20),), 30),
+              IconButton(onPressed: () => setState(() {atual_const = !atual_const;}), icon: expandir, iconSize: 30,),
               /*SizedBox(width: 10,),
               fillButton( () => sendCMD("T"), Text("RECEBE CONST", style: TextStyle(fontSize: 20),), 30),*/
               ])
@@ -588,17 +623,10 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
               //ElevatedButton(onPressed: () => {serial.text += "\n\n\n\n\n\n\n\n\n\n\n\nTeste"}, child: Text("Testar Serial"))
             ],
           ),
+          
           //campoConst("MAPA", MAPA, vlAtual: ""),
-          Padding(
-            padding: EdgeInsets.all(8),
-            child: CheckboxListTile(
-              value: USE_MAP,
-              shape: Border.all(),
-              onChanged: (value) => setState((){USE_MAP = (value ?? false);}),
-              title: Text("Usar Mapa"),
-            )
-          ),
-
+          mapa,
+          
           Padding(
             padding: EdgeInsets.all(8),
             child: Row( 
@@ -652,8 +680,16 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     return Tab(child: Container(
       padding: EdgeInsets.all(8),
       alignment: Alignment.topCenter,
-      child:Column(children:[ 
-        Container(
+      child:Column(
+      children:[
+        Expanded(child: SizedBox()),
+        fillButton( () => sendCMD("C"), Text("CALIBRAÇÃO", style: TextStyle(fontSize: 20),), 30, f:2),
+        Expanded(child: SizedBox()),
+        fillButton( () => sendCMD("R"), Text("RUN", style: TextStyle(fontSize: 20,color: corBotAzul),), 30, f:2),
+        Expanded(child: SizedBox()),
+        fillButton( () => sendCMD("P"), Text("STOP", style: TextStyle(fontSize: 20,color: corBotAzul),), 30, f:2),
+        Expanded(child: SizedBox()),
+        /*Container(
           padding: EdgeInsets.all(8),
           child: Text("MAPA:\n\n(0 -> CURVA | 1 -> RETA)",style: TextStyle(fontSize: 20), textAlign: TextAlign.center,)
         ),
@@ -667,7 +703,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
             enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Color.fromARGB(255, 0, 0, 0))),
             focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Color.fromARGB(255, 0, 85, 255)))
           ),
-        )
+        )*/
       ])
     ) 
   );
