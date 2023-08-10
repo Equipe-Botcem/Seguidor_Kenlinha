@@ -36,6 +36,7 @@ private:
     float LKi = 13;
     float LKd = 50;
 
+    unsigned long tmp_perda =0;
     unsigned long tmp_last_curva = 0;
     float maior_erro_curva = 0;
     unsigned long tmp_last_reta=0;

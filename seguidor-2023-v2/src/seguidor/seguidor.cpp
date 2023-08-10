@@ -97,11 +97,11 @@ void Seguidor_de_Linha::checar_chegada()
 
 			if(qnt_linhas > 1) qnt_linhas--;
 			else if(((millis() - start_time) >= TMP_calib)) stop("Sensor Chegada");
-			else estado_s_chegada = 1;
 			marcacoes_chegada++;
 
 			Serial.println("Linhas de Chegada faltando: " + (String)qnt_linhas +
 							"\nMarcacoes lidas: " + String(marcacoes_chegada));
+			estado_s_chegada = 1;
 		}
 		else if(estado_s_chegada == 2) estado_s_chegada = 1;
 		

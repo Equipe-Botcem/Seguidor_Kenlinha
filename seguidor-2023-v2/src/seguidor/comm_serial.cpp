@@ -142,6 +142,8 @@ void Seguidor_de_Linha::run()
 	
 	curva_time = 0;
 	qnt_linhas = 2;//10
+	marcacoes_chegada = 0;
+	marcacoes_secao = 0;
 	
 	Controlador.reset();
 	Estado_corrida = true;

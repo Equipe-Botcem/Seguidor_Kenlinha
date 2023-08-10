@@ -1,9 +1,10 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'package:controle/hive_config.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:loading_icon_button/loading_icon_button.dart';
 import 'package:flutter_joystick/flutter_joystick.dart';
@@ -34,13 +35,22 @@ class MainPage extends StatefulWidget {
 
 class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
 
+  
+  
   //Objetos para o fucionamento do bluetooth serial
-  FlutterBluetoothSerial serialBLE = FlutterBluetoothSerial.instance;
-  BluetoothConnection? cnx;
-  BluetoothDevice bleRobo = BluetoothDevice(address: "");
-  List<BluetoothDevice> dispsBLE = List<BluetoothDevice>.empty(growable: true);
+  final Uuid SERVICE_ID = Uuid.parse("4cc35f22-1978-41da-b944-ac9fdc39b747");
+  final Uuid CHAR_E_ID =  Uuid.parse("016210bb-89a6-41af-9db9-2cef7bdf36eb");
+  final Uuid CHAR_S_ID =  Uuid.parse("92da7b08-bc25-4bfd-b5ac-0e1c722310b1");
+  final flutterReactiveBle = FlutterReactiveBle();
+  late DiscoveredDevice bleRobo;
+  List<DiscoveredDevice> dispsBLE = List<DiscoveredDevice>.empty(growable: true);
+   List<String> entries = List.empty(growable: true);
 
   bool conectando = false;
+  bool conectado = false;
+  bool lendo = false;
+  static bool escaneando = false;
+  var listening;
   
   late final TabController tabController = TabController(length: 3, vsync: this);
 
@@ -60,6 +70,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   final TextEditingController TOL = TextEditingController();
 
   //Constantes recebidas robo
+
   static String KI_robot = "";
   static String KP_robot = "";
   static String KD_robot = "";
@@ -88,7 +99,6 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     setState((){});
     
     if(conectando){
-      cnx?.dispose();
       conectando = false;
       btnConnectController.stop();
     }
@@ -108,13 +118,14 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   }
   //Custom Widgets
   Future<Widget> listViewDisps() async{
-    List<String> entries = List.empty(growable: true);
-    await serialBLE.getBondedDevices().then((list) {
-      dispsBLE = list;
-      for(BluetoothDevice disp in list){
-        entries.add(disp.name ?? "<Sem nome>");
-      }
-    });
+   
+    
+
+    
+    // Start scanning
+    // Listen to scan results
+    
+
     return SizedBox(
       height: 300.0, // Change as per your requirement
       width: 300.0, // Change as per your requirement
@@ -240,17 +251,57 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     conectando = true;
     try{
       bleRobo = dispsBLE[index];
-      cnx = await BluetoothConnection.toAddress(bleRobo.address);
-      cnx?.input!.listen((data) { readBLE(data); });
-           
-      serial.text = "";
-      sendCMD("T");
-      btnConnectController.success(); 
-      Future.delayed(Duration(milliseconds: 2500), (){btnConnectController.stop();});
+      print(bleRobo.id);
+      flutterReactiveBle.connectToDevice(id: bleRobo.id/*, withServices: [SERVICE_ID], prescanDuration: Duration(seconds: 2)*/).listen((cnx) async{
+      // Handle connection state updates
+        if(cnx.connectionState == DeviceConnectionState.connected){
+          conectado = true;
+           conectando = false;
+          listening.cancel();
+          await flutterReactiveBle.requestConnectionPriority(deviceId: bleRobo.id, priority: ConnectionPriority.highPerformance);
+          final characteristic = QualifiedCharacteristic(serviceId: SERVICE_ID, characteristicId: CHAR_E_ID, deviceId: bleRobo.id);
+          flutterReactiveBle.subscribeToCharacteristic(characteristic).listen((data) {
+              readBLE(data);
+          }, onError: (dynamic error) {
+            
+          });
+          serial.text = "";
+          sendCMD("T");
+          btnConnectController.success();
+          Future.delayed(Duration(milliseconds: 2500), (){btnConnectController.stop();});
+        }
+        else if(cnx.connectionState == DeviceConnectionState.connecting){
+            conectado = false;
+        }
+        else if(cnx.connectionState == DeviceConnectionState.disconnected){
+          conectado = false;
+          conectando = false;
+          if(escaneando == false){
+            escaneando = true;
+            listening = flutterReactiveBle.scanForDevices(withServices: [], scanMode: ScanMode.lowLatency).listen((device) {
+              if(!entries.contains(device.name)){
+                entries.add(device.name ?? "<Sem nome>");
+                dispsBLE.add(device);
+              }
+              if(conectando == true || (conectado == true)){
+                listening.cancel();
+                escaneando = false;
+                print("Cancelado");
+              }
+            });
+          }
+          btnConnectController.error();
+          Future.delayed(Duration(milliseconds: 2500), (){btnConnectController.stop();});
+        }
+        
+        print("AQUI");
+        print(cnx.connectionState);
+      });
       
     }
     catch(erro){
       btnConnectController.error();
+      showMsg(erro.toString(), context);
       Future.delayed(Duration(milliseconds: 2500), (){btnConnectController.stop();});
     }
     setState((){});
@@ -258,21 +309,33 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   }
 
   void sendBLE(String cmd) async{
-    await cnx?.output.allSent;
-    if(cnx?.isConnected == true){
-      cnx?.output.add(ascii.encode(cmd));
+    if(conectado){
+      final characteristic = QualifiedCharacteristic(serviceId: SERVICE_ID, characteristicId: CHAR_S_ID, deviceId: bleRobo.id); 
+      await flutterReactiveBle.writeCharacteristicWithResponse(characteristic, value: utf8.encode(cmd));
     }
     else{
       connectDialog();
     }
   }
 
-  void readBLE(data){
-    data = ascii.decode(data);
-    serial.text += "\n${data.toString()} ;;; ";
-    if(data.toString()[0] == "T"){
-      receiveConsts(data.toString());
+  void readBLE(data) async{
+    if(lendo) return;
+    lendo = true;
+    final characteristic = QualifiedCharacteristic(serviceId: SERVICE_ID, characteristicId: CHAR_E_ID, deviceId: bleRobo.id);
+    final response = await flutterReactiveBle.readCharacteristic(characteristic);
+    data = utf8.decode(response);
+    if(data == ""){
+      lendo = false;
+      return;
     }
+    serial.text += data.toString().replaceAll(";;;", "");
+    for(String _cmd in data.toString().split(";;;")){
+      if(_cmd == "");
+      else if(_cmd[0] == "T" && (_cmd[1] == ":")){
+        receiveConsts(_cmd);
+      }
+    }
+    lendo = false;
     setState(() {});
   }
 
@@ -282,9 +345,8 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   void connectDialog() async{
     btnConnectController.start();
     //Desconectar
-    if(cnx?.isConnected == true){
-      cnx?.dispose();
-      setState((){btnConnectController.stop();});
+    if(conectado){
+      conectado = false;
       return;
     }
 
@@ -324,7 +386,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
       {cmd = "F;";}
     else if(typeCMD == "E") 
       {cmd = "E;";}
-    else if(typeCMD[0] == 'J' && (cnx?.isConnected == true)) 
+    else if(typeCMD[0] == 'J' && (conectado)) 
       {cmd = typeCMD;}
 
     if(cmd != ""){
@@ -530,6 +592,22 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   //Tabs
   
   Tab bluetoothTab(){
+    //entries.clear();
+    if(conectando == false && (conectado == false)){
+      escaneando = true;
+      listening = flutterReactiveBle.scanForDevices(withServices: [], scanMode: ScanMode.lowLatency).listen((device) {
+          if(!entries.contains(device.name)){
+            entries.add(device.name ?? "<Sem nome>");
+            dispsBLE.add(device);
+          }
+          if(conectando == true || (conectado == true)){
+            listening.cancel();
+            escaneando = false;
+            print("Cancelado");
+          }
+        });
+      
+    }
     List<Widget> elementos = [
         Column(children: [
           //Serial textfield
