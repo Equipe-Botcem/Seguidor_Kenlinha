@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "soc_caps.h": "c",
+        "string": "cpp",
+        "sstream": "cpp",
+        "cmath": "cpp"
+    },
+    "idf.adapterTargetName": "esp32"
+}

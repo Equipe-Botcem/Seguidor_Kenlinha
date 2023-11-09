@@ -1,0 +1,21 @@
+dependencies:
+  espressif/ble_conn_mgr:
+    component_hash: 3cdc6d140a7328f4eed11ae9377cf44098177cd43348f1cc537e171e2e6b578e
+    source:
+      service_url: https://api.components.espressif.com/
+      type: service
+    version: 0.1.0
+  espressif/cmake_utilities:
+    component_hash: 32d235c66d22f05ca3b5a3c2bdf273edd273b1e624b144fa8635066be50bae7b
+    source:
+      service_url: https://api.components.espressif.com/
+      type: service
+    version: 0.4.8
+  idf:
+    component_hash: null
+    source:
+      type: idf
+    version: 5.0.1
+manifest_hash: 64aa1865b882c07f7125182761d2e84ee166db2142abad638b2619956bf0093d
+target: esp32s3
+version: 1.0.0
