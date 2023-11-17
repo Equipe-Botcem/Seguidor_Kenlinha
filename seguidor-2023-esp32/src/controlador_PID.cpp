@@ -68,12 +68,13 @@ float controlador_PID::get_correcao(float erro, bool att){
     if(d_tempo == 0) d_tempo = 1;
     tmp_passado = esp_timer_get_time();
 
-    erro_I += erro - erro_antigo;
+    //erro_I += erro - erro_antigo;
+    erro_I += erro * d_tempo;
     if((erro_I <= 0 && (erro - erro_antigo >= 0)) || (erro_I >= 0 && (erro - erro_antigo <= 0)))// || (abs(erro) < 0.1))
 		erro_I = 0;
 
-    //if (d_tempo == 0) d_tempo = 0.001;
-	float correcao = _kp * erro + _ki * erro_I * d_tempo + _kd * (erro - erro_antigo)/d_tempo;
+	//float correcao = _kp * erro + _ki * erro_I * d_tempo + _kd * (erro - erro_antigo)/d_tempo;
+    float correcao = _kp * erro + _ki * erro_I + _kd * (erro - erro_antigo)/d_tempo;
 	if(att) erro_antigo = erro;
 	
 	if(abs(correcao) > 16382) correcao = 16382 * (correcao > 0? 1:-1);

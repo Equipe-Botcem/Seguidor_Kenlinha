@@ -3,13 +3,13 @@
 #include <driver/adc.h>
 #include <driver/gpio.h>
 #include "esp_timer.h"
-
-#include </home/jeiel/Documentos/Botcem/testes_esp32/teste-esp32-s3/lib/SimpleKalmanFilter/src/SimpleKalmanFilter.cpp>
-
+#include <ESP_PWM/ESP_PWM.h>
+#include <SimpleKalmanFilter/SimpleKalmanFilter.h>
 
 //Configuracao inicial
 Seguidor_de_Linha::Seguidor_de_Linha()
 {
+
 	sns_frontais.set_pinos(pinos);
 	sensor_chegada.set_pin(pinos[8]);
 	sensor_mapa.set_pin(pinos[9]);
@@ -18,19 +18,22 @@ Seguidor_de_Linha::Seguidor_de_Linha()
 	gpio_set_direction((gpio_num_t)pinos[12], GPIO_MODE_OUTPUT);    
     gpio_set_level((gpio_num_t)pinos[12], 1);          
 	motor_esq.set_pins(LEDC_CHANNEL_2, LEDC_CHANNEL_3, pinos[13], pinos[14]);
-	
+
 	//ventoinhas
-	gpio_set_direction((gpio_num_t)36, GPIO_MODE_OUTPUT);    
-    gpio_set_level((gpio_num_t)36, 1);
+	
+
+	//gpio_set_direction((gpio_num_t)36, GPIO_MODE_OUTPUT);    
+    //gpio_set_level((gpio_num_t)36, 1);
 
 	//gpio_set_direction((gpio_num_t)38, GPIO_MODE_OUTPUT);    
     //gpio_set_level((gpio_num_t)38, 1);
 
-	ventoinhaD.set_pins(LEDC_CHANNEL_4, LEDC_CHANNEL_5,pinos_ventoinha[0], pinos_ventoinha[1]);
-	ventoinhaE.set_pins(LEDC_CHANNEL_6, LEDC_CHANNEL_7,pinos_ventoinha[3], pinos_ventoinha[4]);
+	//ventoinhaD.set_pins(LEDC_CHANNEL_4, LEDC_CHANNEL_5,pinos_ventoinha[0], pinos_ventoinha[1]);
+	//ventoinhaE.set_pins(LEDC_CHANNEL_6, LEDC_CHANNEL_7,pinos_ventoinha[3], pinos_ventoinha[4]);
 
 	//Sensor lateral
     adc2_config_channel_atten(ADC2_CHANNEL_1,ADC_ATTEN_DB_0);
+	
 	
 }
 void Seguidor_de_Linha::set_BLE_CHAR(BLECharacteristic * Canal){
@@ -55,8 +58,14 @@ float Seguidor_de_Linha::seguir_linha(){
 		curva_time = esp_timer_get_time()/1000;
 	}
 	//if(abs(erro) < 4) checar_chegada();
-	set_ventoinha(9000 + 300*abs(erro));
+	//set_ventoinha(9000 + 300*abs(erro));
 	checar_secao();
+
+	if(abs(erro) > 5){
+		set_ventoinha(6);
+	}
+	else{ set_ventoinha(-6);}
+
 	if(abs(erro) == 30){
 		Controlador.corrigir_trajeto(erro,&motor_dir, &motor_esq);
 		output("Saiu da linha");
@@ -98,9 +107,24 @@ void Seguidor_de_Linha::set_direcao(char direcao = 'F'){
 	direcao_atual = direcao;
 }
 void Seguidor_de_Linha::set_ventoinha(int vel){
-	if (vel > 8191) vel = 8191;
-	ventoinhaD.set_velocidade(-vel);
-	ventoinhaE.set_velocidade(-vel);
+
+	if (vel_ventoinha == vel) return;
+	vel_ventoinha = vel;
+	ESP_PWM::enableChannel(13, 4, 50, 13, 1);
+    ESP_PWM::enableChannel(14, 5, 50, 13, 1);
+	long tmp = esp_timer_get_time();
+    
+    ESP_PWM::setDuty(14, 8191 - 8*76);
+    ESP_PWM::setDuty(13, 8191 - 8*76);
+    while ((esp_timer_get_time() - tmp)/1000 < 3000);
+
+    ESP_PWM::setDuty(14, 8191 - 8*(76 - vel));
+    ESP_PWM::setDuty(13, 8191 - 8*(76 - vel));
+
+	printf("\n%i\n", vel);
+	
+	//ventoinhaD.set_velocidade(-vel);
+	//ventoinhaE.set_velocidade(-vel);
 }
 void Seguidor_de_Linha::set_velocidade(int vel_dir, int vel_esq){
 	motor_dir.set_velocidade(vel_dir);

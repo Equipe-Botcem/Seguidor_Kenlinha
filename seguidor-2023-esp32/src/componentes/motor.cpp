@@ -1,6 +1,6 @@
 #include "motor.hpp"
 #include "esp_timer.h"
-#include "ESP_PWM.h"
+#include "ESP_PWM/ESP_PWM.h"
 
 void motor::init_motor_pwm(){
     ESP_PWM::enableChannel(gpio1, pwm1);

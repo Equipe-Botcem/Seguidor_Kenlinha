@@ -17,7 +17,7 @@
 #include "nvs_flash.h"
 #include <NimBLEDevice.h>
 #include "seguidor.hpp"
-#include "ESP_PWM.h"
+
 
 #include "testes.cpp"
 
@@ -26,7 +26,12 @@
 #define CHARACTERISTIC_E_UUID "92da7b08-bc25-4bfd-b5ac-0e1c722310b1"
 #define DESCRITOR_UUID      "f7aeb4f3-fb2b-466a-b1a4-0ac53610902e"
 
-int ESP_PWM::pinChannels[16];
+
+
+#include "ESP_PWM/ESP_PWM.h"
+
+int ESP_PWM::pinChannels[16] = {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1};
+
 Seguidor_de_Linha CEMLinha = Seguidor_de_Linha();
 int cont_leituras = 0;
 unsigned long cont_time = 0;
@@ -44,30 +49,22 @@ string cmd = "";
 
 bool leitura_atualizada = false;
 
+
 extern "C" void app_main(void)
 {
-
+    
     BLE_INIT();
-    //WIFI_INIT();
    
     continuous_adc_INIT();
     
     cont_time = esp_timer_get_time();
-    
-    //CEMLinha.run();
+
     printf("CEMlinha Pronto!\n");
 
     
-    while(1) {
-        //printf("%.2f\n", CEMLinha.sns_frontais.erro_analogico());
-        //CEMLinha.teste_lateral();
-        
-        
+    while(1) {  
         if(esp_timer_get_time() - cont_time >= 1000000){
             cont_time = esp_timer_get_time();
-            //printf("%i\n", cont_leituras);
-            //CEMLinha.teste_frontal();
-            //printf("%.2f\n", CEMLinha.sns_frontais.erro_analogico());
             cont_leituras = 0;
         }
 
@@ -170,7 +167,7 @@ static void continuous_adc_init(adc_channel_t *channel, uint8_t channel_num, adc
 void BLE_INIT(){
     //BLE
     BLEDevice::init("CEMLinha");
-    BLEDevice::setMTU(256);
+    BLEDevice::setMTU(512);
     
     BLEServer *pServer = BLEDevice::createServer();
     BLEService *pService = pServer->createService(SERVICE_UUID);
@@ -185,7 +182,7 @@ void BLE_INIT(){
                 NIMBLE_PROPERTY::WRITE |
                 NIMBLE_PROPERTY::NOTIFY |
                 NIMBLE_PROPERTY::INDICATE
-            ,1024);
+            ,4096);
 
     pSaida->setValue("");
 
@@ -200,7 +197,7 @@ void BLE_INIT(){
                     NIMBLE_PROPERTY::WRITE |
                     NIMBLE_PROPERTY::NOTIFY |
                     NIMBLE_PROPERTY::INDICATE
-                ,1024);
+                ,4096);
 
     pEntrada->setValue("");
 

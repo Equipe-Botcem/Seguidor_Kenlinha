@@ -12,8 +12,7 @@
 #include <sensor.hpp>
 #include <sensores_frontais.hpp>
 #include <controlador_PID.hpp>
-#include </home/jeiel/Documentos/Botcem/testes_esp32/teste-esp32-s3/lib/SimpleKalmanFilter/src/SimpleKalmanFilter.h>
-
+#include "SimpleKalmanFilter/SimpleKalmanFilter.h"
 #include <NimBLEDevice.h>
 
 using namespace std;
@@ -59,6 +58,8 @@ class Seguidor_de_Linha
         int pinos_ventoinha[5] = {2,42,36,40,39};
         BLECharacteristic * esp_com = NULL;
         string output_buffer;
+
+        int vel_ventoinha = 0;
         
     public:
         bool troca_max_min = false;
@@ -75,6 +76,7 @@ class Seguidor_de_Linha
         
 
         Seguidor_de_Linha();
+
         
         void updateOutput();
         void set_BLE_CHAR(BLECharacteristic * Canal);

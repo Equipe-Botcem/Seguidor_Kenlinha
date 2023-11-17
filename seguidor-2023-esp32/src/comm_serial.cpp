@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
+#include <ESP_PWM/ESP_PWM.h>
 using namespace std;
 
 template <typename T>
@@ -176,7 +177,7 @@ void Seguidor_de_Linha::run()
 {
 	//delay(4te000);
 	output("Chamado");
-	set_ventoinha(5000);
+	
 	vTaskDelay(200 / portTICK_PERIOD_MS);
 	ler_sensores_fast =true;
 	ler_sensores_sem_pausa = true;

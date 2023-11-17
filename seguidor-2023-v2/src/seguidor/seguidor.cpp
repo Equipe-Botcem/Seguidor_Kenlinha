@@ -12,8 +12,8 @@ Seguidor_de_Linha::Seguidor_de_Linha()
         pinMode(pinos[i], OUTPUT);
     }
 	sns_frontais.set_pinos(pinos);
-	sensor_chegada.set_pin(pinos[6]);
-	sensor_mapa.set_pin(pinos[7]);
+	//sensor_chegada.set_pin(pinos[6]);
+	//sensor_mapa.set_pin(pinos[7]);
 	motor_dir.set_pins(pinos[8] , pinos[9] , pinos[10]);
 	motor_esq.set_pins(pinos[11], pinos[12], pinos[13]);
 	
@@ -90,6 +90,7 @@ void Seguidor_de_Linha::set_velocidade_fast(int vel_dir, int vel_esq){
 
 void Seguidor_de_Linha::checar_chegada()
 {
+	return;
 	if (sensor_chegada.get_ult_leitura() >= MAX_PRETO_CHEGADA)
 	{
 		if(estado_s_chegada == 0){
@@ -112,6 +113,7 @@ void Seguidor_de_Linha::checar_chegada()
 //Mapeamento
 void Seguidor_de_Linha::checar_secao()
 {
+	return;
 	if (sensor_mapa.get_ult_leitura() >= MAX_PRETO_MAPA)
 	{
 		if(estado_s_mapa == 0){

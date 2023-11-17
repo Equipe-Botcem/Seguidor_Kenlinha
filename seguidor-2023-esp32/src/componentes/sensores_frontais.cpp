@@ -77,7 +77,7 @@ float sensores_frontais::erro_analogico(){
         return erro_antigo;
     }
     erro /= soma;
-    erro = atan2(erro, 70);//127.5);
+    erro = atan2(erro, 60);//127.5);
     erro *= 57.29578;
     erro *= -1;
 

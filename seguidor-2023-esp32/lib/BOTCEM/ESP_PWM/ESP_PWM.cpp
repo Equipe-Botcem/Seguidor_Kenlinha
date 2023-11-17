@@ -38,9 +38,7 @@ void ESP_PWM::setDuty(int pin, int duty, int speed_mode){
 
 ESP_PWM::ESP_PWM(/* args */)
 {
-    for(int i = 0; i < 16; i++){
-        pinChannels[i] = -1;
-    }
+    
 }
 
 ESP_PWM::~ESP_PWM()
