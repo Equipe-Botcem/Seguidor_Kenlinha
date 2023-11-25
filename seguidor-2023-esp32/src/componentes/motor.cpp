@@ -2,38 +2,14 @@
 #include "esp_timer.h"
 #include "ESP_PWM/ESP_PWM.h"
 
+#include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/gpio.h"
+
 void motor::init_motor_pwm(){
     ESP_PWM::enableChannel(gpio1, pwm1);
     ESP_PWM::enableChannel(gpio2, pwm2);
-    /*ledc_timer_config_t pwm_timer;
-    pwm_timer.speed_mode = LEDC_LOW_SPEED_MODE;
-    pwm_timer.timer_num = LEDC_TIMER_0;
-    pwm_timer.duty_resolution = LEDC_TIMER_13_BIT;
-    pwm_timer.freq_hz = 4000;
-    pwm_timer.clk_cfg = LEDC_AUTO_CLK;
-
-    ledc_timer_config(&pwm_timer);
-
-    ledc_channel_config_t pwm_ch1;
-    pwm_ch1.speed_mode = LEDC_LOW_SPEED_MODE;
-    pwm_ch1.channel = pwm1;
-    pwm_ch1.timer_sel = LEDC_TIMER_0;
-    pwm_ch1.intr_type = LEDC_INTR_DISABLE;
-    pwm_ch1.gpio_num = gpio1;
-    pwm_ch1.duty = 0;
-    pwm_ch1.hpoint = 0;
-
-    ledc_channel_config_t pwm_ch2;
-    pwm_ch2.speed_mode = LEDC_LOW_SPEED_MODE;
-    pwm_ch2.channel = pwm2;
-    pwm_ch2.timer_sel = LEDC_TIMER_0;
-    pwm_ch2.intr_type = LEDC_INTR_DISABLE;
-    pwm_ch2.gpio_num = gpio2;
-    pwm_ch2.duty = 0;
-    pwm_ch2.hpoint = 0;
-
-    ledc_channel_config(&pwm_ch1);
-    ledc_channel_config(&pwm_ch2);*/
 }
 
 void motor::set_direcao(char dir){
@@ -44,14 +20,38 @@ void motor::set_direcao(char dir){
 }
 motor::motor()
 {
+    tmp_last_att = esp_timer_get_time();
     gpio1 = -1;gpio2 = -1;
     sinal = 1; set_direcao('F');
+    posicao = 0;
 }
-void motor::set_pins(ledc_channel_t p1, ledc_channel_t p2, int gp1, int gp2)
+void motor::set_pins(ledc_channel_t p1, ledc_channel_t p2, int gp1, int gp2, int e1, int e2)
 {
-    pwm1 = p1; pwm2 = p2; gpio1 = gp1; gpio2 = gp2;
+    pwm1 = p1; pwm2 = p2; gpio1 = gp1; gpio2 = gp2; enc1 = e1; enc2 = e2;
     sinal = 1; set_direcao('F');
+
     init_motor_pwm();
+    if (enc1 <= 0 && enc2 <= 0) return;
+     gpio_config_t en1 = {
+        .pin_bit_mask = (1ULL<<enc1),
+        .mode = GPIO_MODE_INPUT, // Pode ser GPIO_MODE_INPUT para entrada
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_ENABLE,
+        .intr_type = GPIO_INTR_POSEDGE
+        
+    };
+    gpio_config_t en2 = {
+        .pin_bit_mask = (1ULL<<enc2),
+        .mode = GPIO_MODE_INPUT, // Pode ser GPIO_MODE_INPUT para entrada
+        .pull_up_en = GPIO_PULLUP_DISABLE,
+        .pull_down_en = GPIO_PULLDOWN_ENABLE,
+        .intr_type = GPIO_INTR_DISABLE
+        
+    };
+    gpio_config(&en1);
+    gpio_config(&en2);
+
+
 }
 void motor::set_velocidade(int vel){
     if(vel < -8191) vel = -8191;
@@ -109,5 +109,56 @@ char motor::get_direcao(){
 }
 int motor::get_velocidade(){
     return velocidade;
+}
+
+void motor::encoder(){
+    if (enc1 <= 0 && enc2 <= 0) return;
+    if (gpio_get_level((gpio_num_t)enc1) == 0) return;
+    if (gpio_get_level((gpio_num_t)enc2)) posicao++;
+    else posicao--;
+}
+
+void motor::updateVel(){
+    if(tmp_controle==0) tmp_controle=esp_timer_get_time();
+    if(abs(posicao - ult_pos) >= 1 && (esp_timer_get_time() - tmp_last_att >=500)){
+        vel_real = 1000000*(float)(posicao-ult_pos)/345/(esp_timer_get_time() - tmp_last_att);
+        ult_pos = posicao;
+        tmp_last_att = esp_timer_get_time();
+    }
+    else if(esp_timer_get_time() - tmp_last_att >=200000){
+        vel_real = 0;
+        //tmp_last_att = esp_timer_get_time();
+    }
+
+    /*float erro = vel_objetivo - vel_real;
+    float _kp = 140000, _kd = 200000,_ki = 200;
+    
+    float d_tempo = (esp_timer_get_time() - tmp_controle) /1000.00;
+    if(d_tempo == 0) d_tempo = 1;
+    tmp_controle = esp_timer_get_time();
+
+    //erro_I += erro - erro_antigo;
+    erro_I += erro * d_tempo;
+    if(abs(erro_I)> 4000) erro_I = 4000* erro_I/abs(erro_I);
+    float correcao = _kp * erro + _ki * erro_I + _kd * (erro - erro_antigo)/d_tempo;
+	erro_antigo = erro;
+	
+	
+    set_direcao('F');
+    if(correcao*vel_objetivo < 0) correcao = vel_objetivo/abs(vel_objetivo);
+    if (correcao<0) printf("%.2f\n", correcao);
+    set_velocidade(correcao);*/
+}
+
+int motor::getPosicao(){
+    return posicao;
+}
+
+void motor::resetEncoder(){
+    posicao = 0;
+}
+
+void motor::printencoder(){
+    printf("%i\n", posicao);
 }
 

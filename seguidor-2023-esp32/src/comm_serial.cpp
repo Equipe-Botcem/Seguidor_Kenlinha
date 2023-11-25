@@ -27,7 +27,6 @@ std::string to_string_csd(const T a_value, const int n = 2)
 void Seguidor_de_Linha::updateOutput(){
 	unsigned long millis = (esp_timer_get_time()- tmp_ult_cmd)/1000;
 	if(esp_com != NULL && (millis >= 200) && (output_buffer !="")){
-		
 		esp_com->indicate();
 		esp_com->setValue(output_buffer);
 		output_buffer = "";
@@ -40,6 +39,7 @@ void Seguidor_de_Linha::output(string text, bool new_line){
 	text = ";;;" + text;
 	printf("%s", text.c_str());
 	output_buffer += text;
+	tmp_ult_cmd = esp_timer_get_time();
 }
 void Seguidor_de_Linha::ControlCMD(string command)
 {
@@ -109,19 +109,10 @@ void Seguidor_de_Linha::send_Consts(){
 	int vel_max = vels[0];
 	int vel_min = vels[1];
 	float TOL = sns_frontais.get_tol();
-	/*string Str_mapa = "";
-	int mapa[40] = {0}; Controlador.get_mapa(mapa);
-	for (int i =0; i < 40; i++){
-		Str_mapa += (string)mapa[i] + "+";
-	}*/
+
 	output("T: Constantes: " + to_string_csd(Kp) + "|"+ to_string_csd(Ki)+"|"+to_string_csd(Kd)+"|"+to_string(vel_min)+"|"+to_string(vel_max)+"|"+
 			to_string(TMP_calib)+"|"+to_string_csd(K)+"|"+to_string_csd(TOL)+"|" + (Controlador.get_estado_mapa() ? "Seguindo" : "Nao seguindo")+
 			"|"+"Mapa"+ "|");
-	
-	output(
-		("\nFrontal: " + to_string(MAX_PRETO) +
-		" - Chegada: " + to_string(MAX_PRETO_CHEGADA) + 
-		" - Mapa: " + to_string(MAX_PRETO_MAPA)).c_str()); 
 }
 void Seguidor_de_Linha::set_Consts(string valores)
 {	
@@ -152,8 +143,7 @@ void Seguidor_de_Linha::set_Consts(string valores)
 	sns_frontais.set_tol(dados[7]);
 
 	Controlador.set_estado_mapa(dados[8] == 1 ? true : false);
-	Controlador.reset();
-	vTaskDelay(200 / portTICK_PERIOD_MS);
+	vTaskDelay(300 / portTICK_PERIOD_MS);
 	send_Consts();
 }
 
@@ -163,14 +153,23 @@ void Seguidor_de_Linha::stop(string agente)
 	modo = 'B';
 	ler_sensores_fast = true;
 	ler_sensores_sem_pausa = false;
-	send_Consts();
-	//output(("Tempo: " + to_string(esp_timer_get_time()/1000 - start_time)).c_str());
+	//send_Consts();
 	output(("Stop - Agente: " + agente).c_str());
-	//output(("Secao: " + to_string(Controlador.get_secao())).c_str());
-	Controlador.reset();
+	//Controlador.reset();
 	Estado_corrida = false;
 
 	set_ventoinha(0);
+	string mp = "";
+	int mapa[40];
+	Controlador.get_mapa(mapa);
+	if(agente != "Loop") Controlador.saveMap();
+	for(int i=0; i < 40; i++){
+		
+		mp += to_string(mapa[i]) + ", ";
+	}
+	output(mp);
+	output(to_string_csd(motor_dir.getPosicao()));
+	output(to_string_csd(motor_esq.getPosicao()));
 }
 
 void Seguidor_de_Linha::run()
@@ -178,8 +177,10 @@ void Seguidor_de_Linha::run()
 	//delay(4te000);
 	output("Chamado");
 	
+	motor_dir.resetEncoder();
+	motor_esq.resetEncoder();
 	vTaskDelay(200 / portTICK_PERIOD_MS);
-	ler_sensores_fast =true;
+	ler_sensores_fast = true;
 	ler_sensores_sem_pausa = true;
 	ler_sensores_sem_pausa = false;
 	troca_max_min = false;
@@ -187,20 +188,19 @@ void Seguidor_de_Linha::run()
 	set_direcao('F');
 	modo = 'N';
 	tempo = 0;
-	tmp_fora_linha = 0;
 	estado_s_chegada = 0;
 	estado_s_mapa = 0;
 	curva_time = 0;
 	start_time = 0;
 	marcacoes_chegada = 0;
 	marcacoes_secao = 0;
+	cont_local = 0;
 	curva_time = 0;
-	qnt_linhas = 2;//10
-	enc_chegada=14;
+	enc_chegada = TMP_calib; //12
 	Controlador.reset();
 	sns_frontais.semireset();
 	Estado_corrida = true;
-	
+	set_ventoinha(15);
 }
 
 /**/

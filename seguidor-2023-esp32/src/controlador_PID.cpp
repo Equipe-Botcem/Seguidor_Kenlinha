@@ -1,5 +1,67 @@
 #include <controlador_PID.hpp>
 #include "esp_timer.h"
+#include "nvs_flash.h"
+#include "nvs.h"
+#include <string>
+
+using namespace std;
+
+controlador_PID::controlador_PID(){
+    return;
+    
+}
+void controlador_PID::loadMap(){
+    
+    nvs_handle_t my_handle;
+    nvs_open("storage", NVS_READWRITE, &my_handle);
+
+    // Read data, key - "data", value - "read_data"
+    size_t required_size = 0;
+    nvs_get_str(my_handle, "mapa", NULL, &required_size);
+
+    if (required_size == 0){
+        printf("Nao ha mapa salvo\n");
+        nvs_close(my_handle);
+        return;
+    }
+    char *map = (char*)malloc(required_size);
+    nvs_get_str(my_handle, "mapa", map, &required_size);
+    
+    int sec = 0;
+    string num = "";
+    for (int i =0; i < (int)required_size; i++){
+        if(map[i] == ','){
+            mapa[sec] = stoi(num);
+            num = "";
+            sec++;
+        }
+        else num += map[i];
+
+        if(sec >= 40) break;
+    }
+
+    for (int i =sec; i < 40; i++){
+        mapa[i] = 0;
+    }
+
+    
+    nvs_close(my_handle);
+    free(map);
+    return;
+    
+}
+void controlador_PID::saveMap(){
+    nvs_handle_t my_handle;
+    nvs_open("storage", NVS_READWRITE, &my_handle);
+
+    string m = "";
+    for (int i =0; i < 40; i++){
+        m += to_string(mapa[i]) + ",";
+    }
+    nvs_set_str(my_handle, "mapa", m.c_str());
+    nvs_commit(my_handle);
+    nvs_close(my_handle);
+}
 
 void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
 {
@@ -17,16 +79,46 @@ void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
 
     int v_max = vel_max;
     int v_min = vel_min;
-    if (esp_timer_get_time()/1000 - start_time < 1000) {
+    /*if (esp_timer_get_time()/1000 - start_time < 1000) {
         v_max = 5000;
         v_min = -5000;
+    }*/
+
+    //mapeamento
+    if(seguir_mapa){
+        if (mapa[cont_local] + mapa[cont_local +1] <= m_dir->getPosicao()){
+            cont_local += 2;
+            m_dir->resetEncoder();
+        }
+        else if (mapa[cont_local] - 34 <= m_dir->getPosicao() && (mapa[cont_local] != 0)){
+            v_max = 2000;
+            //v_min = -3000;
+        }
+        
     }
+    else{
+        if(abs(m_dir->getPosicao() - m_esq->getPosicao()) >= 20 && (cont_local % 2 == 0)
+            && (abs(m_dir->vel_real - m_esq->vel_real) > 0.2)){
+            mapa[cont_local] = m_dir->getPosicao();
+            m_dir->resetEncoder();
+            m_esq->resetEncoder();
+            cont_local++;
+            tmp_curva = esp_timer_get_time();
+        }
+        else if(abs(m_dir->vel_real - m_esq->vel_real) <= 0.2 && (cont_local % 2 != 0)
+                && (m_dir->getPosicao() > 40)){
+            mapa[cont_local] = m_dir->getPosicao();
+            m_dir->resetEncoder();
+            m_esq->resetEncoder();
+            cont_local++;
+        }
+    }
+    /*printf("%i %i\n", v_max,v_min);
+    printf("%i %i\n", cont_local,mapa[cont_local]);
+    printf("%i\n", m_dir->getPosicao());*/
     float PID = get_correcao(erro)/8191 * v_max;
     
-    //float _K = (esp_timer_get_time()  - tmp_last_reta) * K/1000.00;
-    //if(estado) v_max = vel_max - _K * abs(erro - erro_perda);
-    //if(vel_max < 40) vel_max = 40;
-    //return;
+    
     if(PID >= 0){
         float vel_corrigida = v_max - PID;
         if(vel_corrigida < v_min) vel_corrigida = v_min;
@@ -40,7 +132,7 @@ void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
 
         (*m_dir).set_velocidade(v_max);
         (*m_esq).set_velocidade((int)vel_corrigida);
-    } 
+    }
     
 }
 bool controlador_PID::get_estado_secao(){
@@ -87,11 +179,17 @@ void controlador_PID::reset(){
     start_time = 0;
     tmp_passado = esp_timer_get_time();
     secao_atual = 0;
+    cont_local = 0;
 	erro_antigo = 0;
     erro_P = 0;
 	erro_I = 0;
 	erro_D = 0;
     estado = false;
+
+    
+    if(!seguir_mapa){
+        set_mapa(NULL, 0);
+    }
 }
 
 void controlador_PID::set_vel(int v_max, int v_min){
@@ -158,7 +256,7 @@ bool controlador_PID::get_estado_mapa(){
     return seguir_mapa;
 }
 int controlador_PID::get_secao(){
-    return secao_atual;
+    return cont_local;
 }
 int controlador_PID::get_controle_secao(){
     return mapa[secao_atual];

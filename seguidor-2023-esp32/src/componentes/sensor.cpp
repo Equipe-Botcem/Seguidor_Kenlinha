@@ -10,6 +10,7 @@ int sensor::ler(int dado){
     ultima_leitura = resolucao - dado;
     if(ultima_leitura > valor_max_lido) valor_max_lido = ultima_leitura;
     if(ultima_leitura < valor_min_lido) valor_min_lido = ultima_leitura;
+
     return ultima_leitura;
 }
 

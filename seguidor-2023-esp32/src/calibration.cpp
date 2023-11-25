@@ -4,7 +4,7 @@
 #include "esp_timer.h"
 int Seguidor_de_Linha::sensor_calib(int pos){
 
-	int vel_calib =4500; 
+	int vel_calib =2500; 
 	// pos = 0: sensores frontais em qualquer lugar na frente da linha branca
 	// pos = 1: sensores laterais
 	if (pos == 0){
@@ -14,7 +14,7 @@ int Seguidor_de_Linha::sensor_calib(int pos){
 		set_direcao('T');
 		set_velocidade(vel_calib,vel_calib);
 		long cont_tolerancia = esp_timer_get_time()/1000;
-		while (!sns_frontais.comp_max_value(100) && (esp_timer_get_time()/1000 - cont_tolerancia < 1500)){
+		while (!sns_frontais.comp_max_value(400) && (esp_timer_get_time()/1000 - cont_tolerancia < 1500)){
 			vTaskDelay(1 / portTICK_PERIOD_MS);
 		}
 		
@@ -30,7 +30,7 @@ int Seguidor_de_Linha::sensor_calib(int pos){
 		for( int j = 0; j < sns_frontais.get_N_sns(); j++){
 			sns_frontais.limites[j] = sns_frontais.sensores[j].calc_limite(2);
 		}
-		MAX_PRETO = (sns_frontais.get_max_media() - sns_frontais.get_min_media())/2 + sns_frontais.get_min_media();
+		
 		set_direcao('F');
 		printf("FIM");
 	
@@ -42,7 +42,7 @@ int Seguidor_de_Linha::sensor_calib(int pos){
 		set_direcao('F');
 		set_velocidade(vel_calib,vel_calib);
 		long cont_tolerancia = esp_timer_get_time()/1000;
-		while(sensor_chegada.get_max_leitura() < 200 && (esp_timer_get_time()/1000 - cont_tolerancia < 1500)){
+		while(sensor_chegada.get_max_leitura() < 1500 && (esp_timer_get_time()/1000 - cont_tolerancia < 1500)){
 			vTaskDelay(1 / portTICK_PERIOD_MS);
 		}
 		if((esp_timer_get_time()/1000 - cont_tolerancia) >= 1500){
@@ -65,7 +65,7 @@ int Seguidor_de_Linha::sensor_calib(int pos){
 }
 void Seguidor_de_Linha::calibracao()
 {
-	int vel_calib =4500; 
+	int vel_calib =2500; 
 	//iniciando interrupcao sem pausa
 	ler_sensores_sem_pausa = true;
 	ler_sensores_fast = false;
@@ -78,8 +78,7 @@ void Seguidor_de_Linha::calibracao()
 	if(sensor_calib(1) == 0) return;
 
 	
-	output(("Frontal: " + to_string(MAX_PRETO)+
-		" | Chegada: " + to_string(MAX_PRETO_CHEGADA) + 
+	output(("Chegada: " + to_string(MAX_PRETO_CHEGADA) + 
 		" | Mapa: " + to_string(MAX_PRETO_MAPA)).c_str());
 
 	set_direcao(lado_pista);

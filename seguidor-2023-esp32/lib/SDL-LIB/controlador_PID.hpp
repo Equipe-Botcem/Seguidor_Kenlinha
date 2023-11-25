@@ -7,15 +7,13 @@ class controlador_PID
 {
 private:
     const int resolucao = 8191;
-    int vel_max = 7200;
-    int vel_min = -7200;
-    /*float Kp = 25;
-    float Ki = 0.0170968;
-    float Kd = 1642;*/
+    int vel_max = 2500;
+    int vel_min = -2500;
+
     float K = 0.01;//3;
     float Kp = 800;
     float Ki = 57;//2.6899;
-    float Kd = 82000;//2500.4;
+    float Kd = 82000;//40000;
 
     unsigned long start_time = 0;
 
@@ -41,20 +39,29 @@ private:
     float LKd = 50;
 
     unsigned long tmp_last_curva = 0;
-    float maior_erro_curva = 0;
     unsigned long tmp_last_reta=0;
     const static int T_mapa = 40;
+    float maior_erro_curva = 0;
+
+    int cont_local = 0;
+    long tmp_curva = 0;
+ 
     bool estado = false;
     float erro_perda = 0;
     int secao_atual = 0;
     bool seguir_mapa = false;
-    int mapa[T_mapa] = {0};
+    int mapa[T_mapa] = {90,68,180,30};
+
 public:
+    controlador_PID();
+
     void corrigir_trajeto(float erro, motor * m_dir, motor * m_esq);
     void corrigir_trajeto_sem_mover(float erro, motor * m_dir, motor * m_esq);
     void corrigir_trajeto_vmax(float erro, motor * m_dir, motor * m_esq, int v_max);
     void prox_secao();
     void encontrar_linha(float erro, motor * m_dir, motor * m_esq, char lado);
+    void loadMap();
+    void saveMap();
 
     void set_vel(int v_max, int v_min);
 

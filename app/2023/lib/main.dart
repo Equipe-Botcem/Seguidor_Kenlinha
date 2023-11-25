@@ -617,7 +617,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 minHeight: 50,
-                maxHeight: 200,
+                maxHeight: 130,
               ),
 
               child: SingleChildScrollView(
@@ -637,14 +637,14 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
             ),
           ),
           
-          Padding(
+          /*Padding(
             padding: EdgeInsets.all(8),
             child: Row( children: [
               fillButton( () => sendCMD("C"), Text("CALIBRAÇÃO", style: TextStyle(fontSize: 20),), 30),
               /*SizedBox(width: 10,),
               fillButton( () => sendCMD("T"), Text("RECEBE CONST", style: TextStyle(fontSize: 20),), 30),*/
               ])
-          ),
+          ),*/
           
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -655,13 +655,13 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
                 campoConst("KP", KP, vlAtual: KP_robot),
                 campoConst("KI", KI, vlAtual: KI_robot),
                 campoConst("KD", KD, vlAtual: KD_robot),
-                campoConst("K", K, vlAtual: K_robot),
+                //campoConst("K", K, vlAtual: K_robot),
               ]),
               colunaMetadeTela([
                 campoConst("VEL MAX", VEL_MAX, vlAtual: VEL_MAX_robot),
                 campoConst("VEL MIN", VEL_MIN, vlAtual: VEL_MIN_robot),
-                campoConst("TMP FORA", TMP_FORA, vlAtual: TMP_FORA_robot),
-                campoConst("TOL", TOL, vlAtual: TOL_robot),
+                campoConst("Marcações", TMP_FORA, vlAtual: TMP_FORA_robot),
+                //campoConst("TOL", TOL, vlAtual: TOL_robot),
               ]),
               //ElevatedButton(onPressed: () => {serial.text += "\n\n\n\n\n\n\n\n\n\n\n\nTeste"}, child: Text("Testar Serial"))
             ],
@@ -695,34 +695,39 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
         ],
         ),
         
-        Expanded(child: Text("")),
+        
+        //ElevatedButton(onPressed: () {mapa.text = "Teste";}, child: Text("teste"))
+        
+      ];
+    return Tab(
+      child: 
+      Column(children: [
+          Expanded(
+              child:ListView(
+                children: [Padding(
+                  padding: EdgeInsets.fromLTRB(0, 10, 0,0),
+                    child: Column(
+                      children: elementos,
+                          
+                    ),
+                  )
+                
+              ],
+            )
+          ),
+          //Expanded(child: Text("")),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            fillButton(() => sendCMD("C"), Text("CLB",style: TextStyle(fontSize: 18, color: corBotAzul, fontWeight: FontWeight.bold)), 0),
             fillButton(() => sendCMD("S"), Text("SET",style: TextStyle(fontSize: 18, color: corBotAzul, fontWeight: FontWeight.bold)), 0),
             fillButton(() => sendCMD("R"), Text("RUN",style: TextStyle(fontSize: 18, color: corBotAzul, fontWeight: FontWeight.bold),), 0),
             fillButton(() => sendCMD("P"), Text("STOP",style: TextStyle(fontSize: 18, color: corBotAzul, fontWeight: FontWeight.bold),), 0),
             
           ],
         ),
-        //ElevatedButton(onPressed: () {mapa.text = "Teste";}, child: Text("teste"))
-        
-      ];
-    return Tab(
-      child: 
-        CustomScrollView(
-          slivers: [SliverFillRemaining(
-            hasScrollBody: false,
-            child:Padding(
-              padding: EdgeInsets.fromLTRB(0, 10, 0,0),
-                child: Column(
-                  children: elementos,
-                      
-                ),
-              )
-            )
-          ],
-        ),
+        ]
+      )
       );
   }
   

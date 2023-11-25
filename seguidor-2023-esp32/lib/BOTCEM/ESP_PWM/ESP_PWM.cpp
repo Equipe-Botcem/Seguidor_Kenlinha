@@ -26,6 +26,9 @@ void ESP_PWM::enableChannel(int pin, int channel, int freq, int resolution, int 
 }
 
 void ESP_PWM::setDuty(int pin, int duty, int speed_mode){
+    /*ledc_set_duty((ledc_mode_t)speed_mode, (ledc_channel_t)pin, duty);
+    ledc_update_duty((ledc_mode_t)speed_mode, (ledc_channel_t)pin);
+    return;*/
     if (pin < 0) return;
     for (int i = 0; i < 16; i ++){
         if(pinChannels[i] == pin){

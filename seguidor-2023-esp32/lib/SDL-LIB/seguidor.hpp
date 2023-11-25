@@ -1,19 +1,24 @@
-#include <string>
-#include <stdio.h>
-#include "sdkconfig.h"
-#include "esp_log.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/semphr.h"
+
+#include "esp_log.h"
+#include "esp_timer.h"
 #include "esp_adc/adc_continuous.h"
 #include "soc/soc_caps.h"
-#include "esp_timer.h"
+#include "sdkconfig.h"
+
+#include "SimpleKalmanFilter/SimpleKalmanFilter.h"
+#include <NimBLEDevice.h>
+
+#include <string>
+#include <stdio.h>
+
 #include <motor.hpp>
 #include <sensor.hpp>
 #include <sensores_frontais.hpp>
 #include <controlador_PID.hpp>
-#include "SimpleKalmanFilter/SimpleKalmanFilter.h"
-#include <NimBLEDevice.h>
+
 
 using namespace std;
 #ifndef SDL_H
@@ -30,36 +35,38 @@ class Seguidor_de_Linha
 
         SimpleKalmanFilter Kalman = SimpleKalmanFilter(0.008,0.008,0.015);
 
+        BLECharacteristic * esp_com = NULL;
+
         unsigned long start_time = 0;
         char modo = 'N';
 
         //Parametros de calibracao
         float MAX_PRETO_CHEGADA = 100;
         float MAX_PRETO_MAPA = 100;
-        float MAX_PRETO = 100;
-        //int vel_calib = 4500;
 
         unsigned long ult_leitura_chg = 0;
 
         int estado_s_chegada = 0;
         int estado_s_mapa = 0;
         //-------------------//
-        unsigned long tmp_fora_linha = 0;
+        //unsigned long tmp_fora_linha = 0;
         int marcacoes_secao = 0;
         int marcacoes_chegada = 0;
-        int qnt_linhas = 2;
-        int enc_chegada = 14;
+        int enc_chegada = 10;
+        
         unsigned long curva_time = 0;
         char direcao_atual = 'F';
         char lado_pista = 'D';
 
         int pinos[15] = {ADC_CHANNEL_2,ADC_CHANNEL_3,ADC_CHANNEL_4,ADC_CHANNEL_5,ADC_CHANNEL_6,ADC_CHANNEL_7, ADC_CHANNEL_8, ADC_CHANNEL_9, ADC_CHANNEL_0, ADC_CHANNEL_1,
-                            47,21,48,45,0};
+                            0,45,48,21,47};
         int pinos_ventoinha[5] = {2,42,36,40,39};
-        BLECharacteristic * esp_com = NULL;
+        
         string output_buffer;
 
         int vel_ventoinha = 0;
+        
+        int cont_local = 0;
         
     public:
         bool troca_max_min = false;
@@ -70,20 +77,26 @@ class Seguidor_de_Linha
         bool ler_sensores_sem_pausa = false;
         bool ler_sensores_fast = false;
 
-        unsigned long TMP_calib = 15;
+        unsigned long TMP_calib = 12;
         unsigned long tempo = TMP_calib;
         bool Estado_corrida = false;
         
 
         Seguidor_de_Linha();
 
-        
+        void loop();
+        void init();
+        void intr_enc_dir();
+        void intr_enc_esq();
+        void printEncoders();
         void updateOutput();
         void set_BLE_CHAR(BLECharacteristic * Canal);
         char get_modo();
         int getpin(int pin);
         float seguir_linha();
         float seguir_linha_final();
+
+        void printError();
 
         //Checks
         void checar_chegada();
