@@ -16,6 +16,8 @@ private:
 	float percent[N_sns] = {0,0,0,0};//,0,0};
 
 	int ordem_canal_sensores[10] = {8,9,5,0,1,2,3,4,6,7};
+	//int ordem_canal_sensores[10] = {0,1,2,3,4,5,6,7,8,9}; //lampedrao
+
 
 public:
 

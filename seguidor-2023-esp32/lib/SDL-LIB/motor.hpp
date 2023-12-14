@@ -23,11 +23,14 @@ private:
 
     int vel_espera;
 
-    float vel_objetivo = 2;
+    bool ativo = false;
+
+    //controle
+    bool velControl = true;
+    float vel_objetivo = 0;
     int tmp_last_att = 0;
     int ult_pos = 0;
     unsigned long tmp_espera = 0;
-
     float erro_I =0;
     float erro_antigo = 0;
     long tmp_controle = 0;
@@ -50,6 +53,10 @@ public:
     int getPosicao();
     void resetEncoder();
     void printencoder();
+
+    void ativar();
+    void desativar();
+
     
 };
 #endif

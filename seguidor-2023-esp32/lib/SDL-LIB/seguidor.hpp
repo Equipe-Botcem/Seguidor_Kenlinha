@@ -58,7 +58,11 @@ class Seguidor_de_Linha
         char direcao_atual = 'F';
         char lado_pista = 'D';
 
-        int pinos[15] = {ADC_CHANNEL_2,ADC_CHANNEL_3,ADC_CHANNEL_4,ADC_CHANNEL_5,ADC_CHANNEL_6,ADC_CHANNEL_7, ADC_CHANNEL_8, ADC_CHANNEL_9, ADC_CHANNEL_0, ADC_CHANNEL_1,
+        //int pinos[15] = {ADC_CHANNEL_2,ADC_CHANNEL_3,ADC_CHANNEL_4,ADC_CHANNEL_5,ADC_CHANNEL_6,ADC_CHANNEL_7, ADC_CHANNEL_8, ADC_CHANNEL_9, ADC_CHANNEL_0, ADC_CHANNEL_1,
+        //                    0,45,48,21,47};
+
+        //10 13 17 26 28 29 27 14 , 24 , 15 lampedrao adcnum
+        int pinos[15] = {ADC_CHANNEL_0,ADC_CHANNEL_3,ADC_CHANNEL_7,ADC_CHANNEL_6,ADC_CHANNEL_8,ADC_CHANNEL_9, ADC_CHANNEL_7, ADC_CHANNEL_4, ADC_CHANNEL_4, ADC_CHANNEL_5,
                             0,45,48,21,47};
         int pinos_ventoinha[5] = {2,42,36,40,39};
         
@@ -93,6 +97,11 @@ class Seguidor_de_Linha
         void set_BLE_CHAR(BLECharacteristic * Canal);
         char get_modo();
         int getpin(int pin);
+
+        char getDir();
+        float getVelDir();
+        float getVelEsq();
+
         float seguir_linha();
         float seguir_linha_final();
 
@@ -122,6 +131,7 @@ class Seguidor_de_Linha
 
         void set_direcao(char direcao);
         void set_velocidade(int vel_dir, int vel_esq);
+        void setVel(float vel_dir, float vel_esq);
         void set_velocidade_fast(int vel_dir, int vel_esq);
         void set_ventoinha(int vel);
 

@@ -80,19 +80,58 @@ extern "C" void app_main(void)
 
     seguidor.init();
     seguidor.output(Robo + " pronto!");
-
+    long tmp_comeco = 0;
+    long tmp_acc = 0;
+    long tmp_ini_stop = 0;
+    bool TwoSec = false;
     //main loop
     while(1) {  
         
-        if(esp_timer_get_time() - cont_time >= 500000){
+        if(esp_timer_get_time() - cont_time >= 250000){
             cont_time = esp_timer_get_time();
             cont_leituras = 0;
+            //seguidor.printEncoders();
             if (seguidor.Estado_corrida == true){
                 seguidor.printEncoders();
             }
         }
+        if(tmp_ini_stop != 0 && (abs(seguidor.getVelDir()) < 0.10) && (abs(seguidor.getVelEsq()) < 0.10)){
+            seguidor.output("Tempo:" + to_string(esp_timer_get_time() - tmp_ini_stop));
+            tmp_ini_stop = 0;
+            //seguidor.printEncoders();
+            
+        }
+        if(tmp_acc > 0 && (abs(seguidor.getVelDir()) >= 1)){
+            seguidor.output("Tempo:" + to_string(esp_timer_get_time() - tmp_acc));
+            tmp_acc = 0;
+            //seguidor.printEncoders();
+            
+        }
 
 		if (seguidor.Estado_corrida == true){
+            /*f(tmp_comeco == 0){
+                seguidor.setVel(1,1);
+                //seguidor.set_velocidade(2800,0);
+
+                tmp_comeco = esp_timer_get_time();
+                tmp_acc = tmp_comeco;
+            }
+            else if((esp_timer_get_time() - tmp_comeco >= 4000000) && !TwoSec){
+                seguidor.printEncoders();
+                TwoSec = true;
+
+            }
+            else if((esp_timer_get_time() - tmp_comeco >= 8000000)){
+                if(seguidor.getDir() != 'P'){
+                    seguidor.printEncoders();
+                    tmp_ini_stop = esp_timer_get_time();
+                    seguidor.set_direcao('P');
+                    
+                    //seguidor.output("Inicio Parada");
+                    
+                }
+            }*/
+            
             if(leitura_atualizada){
                 seguidor.seguir_linha();
                 cont_leituras++;

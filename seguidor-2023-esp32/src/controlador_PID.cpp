@@ -8,7 +8,6 @@ using namespace std;
 
 controlador_PID::controlador_PID(){
     return;
-    
 }
 void controlador_PID::loadMap(){
     
@@ -65,10 +64,12 @@ void controlador_PID::saveMap(){
 
 void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
 {
+/*
     if (start_time == 0) start_time = esp_timer_get_time()/1000;
     if(abs(erro) > abs(maior_erro_curva)) maior_erro_curva = erro;
     if((abs(erro) > 3) && (estado == false)) prox_secao();
     else if((abs(erro) < 0.5)  && (estado == true) && (abs(maior_erro_curva) >= 3)) prox_secao();
+*/
 
     if(abs(erro_antigo) != 30 && (abs(erro) == 30)){
         erro_perda = erro_antigo;
@@ -91,7 +92,7 @@ void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
             m_dir->resetEncoder();
         }
         else if (mapa[cont_local] - 34 <= m_dir->getPosicao() && (mapa[cont_local] != 0)){
-            v_max = 2000;
+            v_max = 2;
             //v_min = -3000;
         }
         
@@ -116,6 +117,25 @@ void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
     /*printf("%i %i\n", v_max,v_min);
     printf("%i %i\n", cont_local,mapa[cont_local]);
     printf("%i\n", m_dir->getPosicao());*/
+
+    float PID = get_correcao(erro)/8191 * v_max;
+    //float PID = 0.288*erro;
+    
+    if(PID >= 0){
+        float vel_corrigida = v_max - PID;
+        if(vel_corrigida < v_min) vel_corrigida = v_min;
+        
+        (*m_dir).setVel(vel_corrigida);
+        (*m_esq).setVel(v_max);
+    }
+    else{
+        float vel_corrigida = v_max + PID;
+        if(vel_corrigida < v_min) vel_corrigida = v_min;
+
+        (*m_dir).setVel(v_max);
+        (*m_esq).setVel(vel_corrigida);
+    }
+    /*
     float PID = get_correcao(erro)/8191 * v_max;
     
     
@@ -132,7 +152,7 @@ void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
 
         (*m_dir).set_velocidade(v_max);
         (*m_esq).set_velocidade((int)vel_corrigida);
-    }
+    }*/
     
 }
 bool controlador_PID::get_estado_secao(){

@@ -71,10 +71,10 @@ void Seguidor_de_Linha::calibracao()
 	ler_sensores_fast = false;
 
 	troca_max_min = true;
-	output("Calibrando sensores frontais\n");
+	output("Calibrando sensores frontais");
 	if(sensor_calib(0) == 0) return;
 
-	output("Calibrando sensor lateral\n");
+	output("Calibrando sensor lateral");
 	if(sensor_calib(1) == 0) return;
 
 	

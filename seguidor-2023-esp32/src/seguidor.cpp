@@ -46,6 +46,15 @@ void Seguidor_de_Linha::intr_enc_dir(){
 void Seguidor_de_Linha::intr_enc_esq(){
 	motor_esq.encoder();
 }
+char Seguidor_de_Linha::getDir(){
+	return direcao_atual;
+}
+float Seguidor_de_Linha::getVelDir(){
+	return motor_dir.vel_real;
+}
+float Seguidor_de_Linha::getVelEsq(){
+	return motor_esq.vel_real;
+}
 
 void Seguidor_de_Linha::loop(){
 	motor_dir.updateVel();
@@ -54,7 +63,8 @@ void Seguidor_de_Linha::loop(){
 }
 
 void Seguidor_de_Linha::printEncoders(){
-	output(to_string(Controlador.get_secao()));
+	//output(to_string(Controlador.get_secao()));
+	output("Velocidade:");
 	output(to_string(motor_dir.vel_real) + "m/s");
 	output(to_string(motor_esq.vel_real) + "m/s");
 }
@@ -167,6 +177,10 @@ void Seguidor_de_Linha::set_ventoinha(int vel){
 void Seguidor_de_Linha::set_velocidade(int vel_dir, int vel_esq){
 	motor_dir.set_velocidade(vel_dir);
 	motor_esq.set_velocidade(vel_esq);
+}
+void Seguidor_de_Linha::setVel(float vel_dir, float vel_esq){
+	motor_dir.setVel(vel_dir);
+	motor_esq.setVel(vel_esq);
 }
 
 void Seguidor_de_Linha::set_velocidade_fast(int vel_dir, int vel_esq){

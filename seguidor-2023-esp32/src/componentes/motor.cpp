@@ -18,17 +18,29 @@ void motor::set_direcao(char dir){
         set_velocidade(0);
     }
 }
+void motor::ativar(){
+    ativo = true;
+    set_direcao('F');
+    tmp_controle = esp_timer_get_time();
+    erro_I = 0;
+    erro_antigo = 0;
+}
+void motor::desativar(){
+    ativo = false;
+    set_direcao('P');
+}
 motor::motor()
 {
     tmp_last_att = esp_timer_get_time();
     gpio1 = -1;gpio2 = -1;
-    sinal = 1; set_direcao('F');
+    sinal = 1; 
     posicao = 0;
+    //set_direcao('P');
 }
 void motor::set_pins(ledc_channel_t p1, ledc_channel_t p2, int gp1, int gp2, int e1, int e2)
 {
     pwm1 = p1; pwm2 = p2; gpio1 = gp1; gpio2 = gp2; enc1 = e1; enc2 = e2;
-    sinal = 1; set_direcao('F');
+    sinal = 1;
 
     init_motor_pwm();
     if (enc1 <= 0 && enc2 <= 0) return;
@@ -65,11 +77,6 @@ void motor::set_velocidade(int vel){
     
 
     
-    if (esp_timer_get_time()/1000 - tmp_espera < 30 && ((vel > 0 && velocidade < 0) || (vel<0 && velocidade>0))){
-        tmp_espera = esp_timer_get_time()/1000;
-        ledc_set_duty(LEDC_LOW_SPEED_MODE, pwm1, 8191);
-        ledc_set_duty(LEDC_LOW_SPEED_MODE, pwm2, 8191);
-    }
     if (esp_timer_get_time()/1000 - tmp_espera > 30){
         switch (ref)
         {
@@ -116,6 +123,8 @@ void motor::encoder(){
     if (gpio_get_level((gpio_num_t)enc1) == 0) return;
     if (gpio_get_level((gpio_num_t)enc2)) posicao++;
     else posicao--;
+
+
 }
 
 void motor::updateVel(){
@@ -129,9 +138,10 @@ void motor::updateVel(){
         vel_real = 0;
         //tmp_last_att = esp_timer_get_time();
     }
-
-    /*float erro = vel_objetivo - vel_real;
-    float _kp = 140000, _kd = 200000,_ki = 200;
+    
+    if(!ativo || !velControl) return;
+    float erro = vel_objetivo - vel_real;
+    float _kp = 200, _kd = 2000,_ki = 3;
     
     float d_tempo = (esp_timer_get_time() - tmp_controle) /1000.00;
     if(d_tempo == 0) d_tempo = 1;
@@ -139,23 +149,33 @@ void motor::updateVel(){
 
     //erro_I += erro - erro_antigo;
     erro_I += erro * d_tempo;
-    if(abs(erro_I)> 4000) erro_I = 4000* erro_I/abs(erro_I);
+    if(abs(_ki*erro_I)> 2000) erro_I = 2000* erro_I/abs(erro_I) / _ki;
     float correcao = _kp * erro + _ki * erro_I + _kd * (erro - erro_antigo)/d_tempo;
+    correcao += 1600 * vel_objetivo;
 	erro_antigo = erro;
 	
-	
-    set_direcao('F');
-    if(correcao*vel_objetivo < 0) correcao = vel_objetivo/abs(vel_objetivo);
-    if (correcao<0) printf("%.2f\n", correcao);
-    set_velocidade(correcao);*/
-}
+    if(correcao*vel_objetivo < 0){
+        if (abs(vel_real) > 2.5) correcao = vel_objetivo/abs(vel_objetivo);
 
+        else if(abs(correcao) > (8191 - abs(vel_real)*3276)){
+            correcao = -vel_objetivo/abs(vel_objetivo)*(8191 - abs(vel_real)*3276);
+        }
+        
+    }
+    set_velocidade(correcao);
+}
+void motor::setVel(float vel){
+    vel_objetivo = vel;
+}
 int motor::getPosicao(){
     return posicao;
 }
 
 void motor::resetEncoder(){
     posicao = 0;
+    ult_pos = 0;
+    tmp_last_att = esp_timer_get_time();
+    vel_real = 0;
 }
 
 void motor::printencoder(){

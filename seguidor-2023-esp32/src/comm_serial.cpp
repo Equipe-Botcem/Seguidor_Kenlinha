@@ -84,9 +84,9 @@ void Seguidor_de_Linha::ControlCMD(string command)
 		joystick_control(command);
 		break;
 	case TESTE_PWM:
-		for(unsigned int i = 2; i < command.length(); i++){
+		for(unsigned int i = 1; i < command.length(); i++){
 			if(command[i] == '|'){
-				set_velocidade(stoi(command.substr(2, i)),stoi(command.substr(2, i)));
+				setVel(stof(command.substr(1, i)),stof(command.substr(1, i)));
 				break;
 			}
 		}
@@ -170,15 +170,21 @@ void Seguidor_de_Linha::stop(string agente)
 	output(mp);
 	output(to_string_csd(motor_dir.getPosicao()));
 	output(to_string_csd(motor_esq.getPosicao()));
+
+	motor_dir.desativar();
+	motor_esq.desativar();
 }
 
 void Seguidor_de_Linha::run()
 {
 	//delay(4te000);
 	output("Chamado");
+	setVel(0,0);
+	motor_dir.resetEncoder(); motor_dir.ativar();
+	motor_esq.resetEncoder(); motor_esq.ativar();
+
 	
-	motor_dir.resetEncoder();
-	motor_esq.resetEncoder();
+
 	vTaskDelay(200 / portTICK_PERIOD_MS);
 	ler_sensores_fast = true;
 	ler_sensores_sem_pausa = true;
@@ -200,7 +206,7 @@ void Seguidor_de_Linha::run()
 	Controlador.reset();
 	sns_frontais.semireset();
 	Estado_corrida = true;
-	set_ventoinha(15);
+	//set_ventoinha(15);
 }
 
 /**/

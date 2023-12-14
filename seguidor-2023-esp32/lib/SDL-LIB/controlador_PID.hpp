@@ -7,13 +7,13 @@ class controlador_PID
 {
 private:
     const int resolucao = 8191;
-    int vel_max = 2500;
-    int vel_min = -2500;
+    int vel_max = 3;
+    int vel_min = 0;
 
     float K = 0.01;//3;
-    float Kp = 800;
+    float Kp = 2359;//800;
     float Ki = 57;//2.6899;
-    float Kd = 82000;//40000;
+    float Kd = 120000;//40000;
 
     unsigned long start_time = 0;
 
