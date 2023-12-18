@@ -7,13 +7,17 @@ class controlador_PID
 {
 private:
     const int resolucao = 8191;
-    int vel_max = 3;
-    int vel_min = 0;
+    float vel_max = 3;
+    float vel_min = 0;
+
+    float controle_2m[3] = {800,57,40000};
+    float controle_3m[3] = {2359,57,120000};
+    float controle_4m[3] = {4720,57,240000};
 
     float K = 0.01;//3;
-    float Kp = 2359;//800;
+    float Kp = 800;//800;
     float Ki = 57;//2.6899;
-    float Kd = 120000;//40000;
+    float Kd = 80000;//40000;
 
     unsigned long start_time = 0;
 
@@ -63,7 +67,7 @@ public:
     void loadMap();
     void saveMap();
 
-    void set_vel(int v_max, int v_min);
+    void set_vel(float v_max, float v_min);
 
     void set_const(float _kp, float _ki, float _kd, float _k);
     void set_const_L(float _kp, float _ki, float _kd);
@@ -74,8 +78,9 @@ public:
     void get_const(float * consts);
     void get_const_L(float * consts);
     void get_mapa(int * _mapa);
-    void get_vel(int * vetor);
+    void get_vel(float * vetor);
     
+    float getIntegral();
     bool get_estado_mapa();
     float get_erro_perda();
     int get_secao();

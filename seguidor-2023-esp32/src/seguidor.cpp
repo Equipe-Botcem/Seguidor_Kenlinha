@@ -65,8 +65,12 @@ void Seguidor_de_Linha::loop(){
 void Seguidor_de_Linha::printEncoders(){
 	//output(to_string(Controlador.get_secao()));
 	output("Velocidade:");
-	output(to_string(motor_dir.vel_real) + "m/s");
-	output(to_string(motor_esq.vel_real) + "m/s");
+	string msg, tmp;
+	motor_dir.teste(&tmp);
+	msg = tmp + "\n";	
+	motor_esq.teste(&tmp);
+	msg += tmp;
+	output(msg);
 }
 void Seguidor_de_Linha::printError(){
 	
@@ -76,6 +80,9 @@ void Seguidor_de_Linha::printError(){
 
 void Seguidor_de_Linha::set_BLE_CHAR(BLECharacteristic * Canal){
 	esp_com = Canal;
+}
+void Seguidor_de_Linha::set_WIFIBuffer(string * buffer){
+	wifi_saida = buffer;
 }
 //funcao para seguir a linha
 float Seguidor_de_Linha::seguir_linha(){

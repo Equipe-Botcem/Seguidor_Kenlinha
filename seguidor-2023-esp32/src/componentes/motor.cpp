@@ -7,6 +7,8 @@
 #include "freertos/task.h"
 #include "driver/gpio.h"
 
+using namespace std;
+
 void motor::init_motor_pwm(){
     ESP_PWM::enableChannel(gpio1, pwm1);
     ESP_PWM::enableChannel(gpio2, pwm2);
@@ -33,14 +35,12 @@ motor::motor()
 {
     tmp_last_att = esp_timer_get_time();
     gpio1 = -1;gpio2 = -1;
-    sinal = 1; 
     posicao = 0;
     //set_direcao('P');
 }
 void motor::set_pins(ledc_channel_t p1, ledc_channel_t p2, int gp1, int gp2, int e1, int e2)
 {
     pwm1 = p1; pwm2 = p2; gpio1 = gp1; gpio2 = gp2; enc1 = e1; enc2 = e2;
-    sinal = 1;
 
     init_motor_pwm();
     if (enc1 <= 0 && enc2 <= 0) return;
@@ -114,6 +114,9 @@ void motor::set_velocidade_fast(int vel){
 char motor::get_direcao(){
     return direcao;
 }
+float motor::getVelObj(){
+    return vel_objetivo;
+}
 int motor::get_velocidade(){
     return velocidade;
 }
@@ -126,7 +129,13 @@ void motor::encoder(){
 
 
 }
+void motor::teste(string *teste){
 
+    * teste  = (
+        to_string(vel_real) + " -> " + to_string(vel_objetivo) + " m/s\n"+
+        "Integral: " + to_string(erro_I)
+    );
+}
 void motor::updateVel(){
     if(tmp_controle==0) tmp_controle=esp_timer_get_time();
     if(abs(posicao - ult_pos) >= 1 && (esp_timer_get_time() - tmp_last_att >=500)){
@@ -141,25 +150,27 @@ void motor::updateVel(){
     
     if(!ativo || !velControl) return;
     float erro = vel_objetivo - vel_real;
-    float _kp = 200, _kd = 2000,_ki = 3;
     
+    float _kp = 3000, _kd = 500000,_ki = 40;
+    //if (abs(erro) > 1) _kp += 3000;// 1000 a 3000
     float d_tempo = (esp_timer_get_time() - tmp_controle) /1000.00;
-    if(d_tempo == 0) d_tempo = 1;
+    if(d_tempo == 0) d_tempo = 0.000001;
     tmp_controle = esp_timer_get_time();
 
     //erro_I += erro - erro_antigo;
     erro_I += erro * d_tempo;
-    if(abs(_ki*erro_I)> 2000) erro_I = 2000* erro_I/abs(erro_I) / _ki;
+    if(abs(erro_I)> 2000) erro_I = 2000* erro_I/abs(erro_I);
     float correcao = _kp * erro + _ki * erro_I + _kd * (erro - erro_antigo)/d_tempo;
-    correcao += 1600 * vel_objetivo;
+    correcao += 0;
 	erro_antigo = erro;
 	
     if(correcao*vel_objetivo < 0){
-        if (abs(vel_real) > 2.5) correcao = vel_objetivo/abs(vel_objetivo);
+        correcao = 0;
+        /*if (abs(vel_real) > 2.5) correcao = vel_objetivo/abs(vel_objetivo);
 
         else if(abs(correcao) > (8191 - abs(vel_real)*3276)){
             correcao = -vel_objetivo/abs(vel_objetivo)*(8191 - abs(vel_real)*3276);
-        }
+        }*/
         
     }
     set_velocidade(correcao);

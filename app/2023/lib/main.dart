@@ -2,12 +2,16 @@
 
 import 'dart:convert';
 import 'dart:io' show Platform;
+import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:controle/hive_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:loading_icon_button/loading_icon_button.dart';
 import 'package:flutter_joystick/flutter_joystick.dart';
+import 'package:esp_smartconfig/esp_smartconfig.dart';
 
 
 void main() async {
@@ -35,28 +39,10 @@ class MainPage extends StatefulWidget {
 
 class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
 
-  
-  
-  //Objetos para o fucionamento do bluetooth serial
-  final Uuid SERVICE_ID = Uuid.parse("4cc35f22-1978-41da-b944-ac9fdc39b747");
-  final Uuid CHAR_E_ID =  Uuid.parse("016210bb-89a6-41af-9db9-2cef7bdf36eb");
-  final Uuid CHAR_S_ID =  Uuid.parse("92da7b08-bc25-4bfd-b5ac-0e1c722310b1");
-  final flutterReactiveBle = FlutterReactiveBle();
-  late DiscoveredDevice bleRobo;
-  List<DiscoveredDevice> dispsBLE = List<DiscoveredDevice>.empty(growable: true);
-   List<String> entries = List.empty(growable: true);
-
-  bool conectando = false;
-  bool conectado = false;
-  bool lendo = false;
-  static bool escaneando = false;
-  var listening;
-  
+  //UI e UX
   late final TabController tabController = TabController(length: 3, vsync: this);
-
   final LoadingButtonController btnConnectController = LoadingButtonController();
 
-  //Controladores dos campos de escrita
   final TextEditingController mapa = TextEditingController();
   final TextEditingController serial = TextEditingController();
   final TextEditingController KI = TextEditingController();
@@ -69,8 +55,35 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   final TextEditingController K = TextEditingController();
   final TextEditingController TOL = TextEditingController();
 
-  //Constantes recebidas robo
+  Color corBotAzul = Color.fromARGB(255, 0, 255, 255);
 
+  String tipoCnx = "BLE";
+
+  //Variaveis para o fucionamento do bluetooth serial
+  final Uuid SERVICE_ID = Uuid.parse("4cc35f22-1978-41da-b944-ac9fdc39b747");
+  final Uuid CHAR_E_ID =  Uuid.parse("016210bb-89a6-41af-9db9-2cef7bdf36eb");
+  final Uuid CHAR_S_ID =  Uuid.parse("92da7b08-bc25-4bfd-b5ac-0e1c722310b1");
+  final flutterReactiveBle = FlutterReactiveBle();
+  late DiscoveredDevice bleRobo;
+  List<DiscoveredDevice> dispsBLE = List<DiscoveredDevice>.empty(growable: true);
+   List<String> entries = List.empty(growable: true);
+
+  // Variaveis para WIFI
+  RawDatagramSocket? socket;
+
+
+  //Status
+  bool initial = true;
+  bool conectando = false;
+  bool conectado = false;
+  bool lendo = false;
+  static bool escaneando = false;
+  var listening;
+  
+  //Hive - Banco de dados
+  static String actualBox = "";
+
+  //Constantes recebidas do robo
   static String KI_robot = "";
   static String KP_robot = "";
   static String KD_robot = "";
@@ -81,21 +94,45 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   static String TOL_robot = "";
   static bool USE_MAP = false;
 
-  //Hive
-  static String actualBox = "";
-
   //Joystick
   double _x = 0, _y = 0, step = 100;
 
-  bool initial = true;
+  //Inicio App
   MainPageState(){
     if(!initial) setState((){});
+    else{
+      INIT_WIFI();
+    }
     initial = false;
   }
 
-  Color corBotAzul = Color.fromARGB(255, 0, 255, 255);
+  //wifi
+  
+  void INIT_WIFI() async{
+    if(socket !=null) return;
+    socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 8889);
+    socket?.broadcastEnabled = true;
+
+    socket?.listen((RawSocketEvent event) {
+      if (event == RawSocketEvent.read) {
+        Datagram? datagram = socket?.receive();
+        if (datagram != null) {
+          String message = utf8.decode(datagram.data);
+          // Handle the received message
+          readWIFI(message);
+        }
+      }
+    });
+  }
+  void mudarTipoCnx() async{
+    if(tipoCnx != "BLE") tipoCnx = "BLE";
+    else tipoCnx = "WIFI";
+    setState(() {});
+    
+  }
+  
   //Funcoes para interface e teste
-  Future<bool> backAndroid() async{
+  Future<bool> backAndroid() async{ //Altera o comportamento do comando "voltar" do android
     setState((){});
     
     if(conectando){
@@ -108,7 +145,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     return false;
   } 
 
-  void showMsg(String text, BuildContext context){
+  void showMsg(String text, BuildContext context){ // Exibe uma mensagem
     showDialog(context: context,builder: (context) {
         return AlertDialog(
           content: Text(text),
@@ -116,19 +153,12 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
       }
     );
   }
-  //Custom Widgets
-  Future<Widget> listViewDisps() async{
-   
-    
 
-    
-    // Start scanning
-    // Listen to scan results
-    
-
+  //Widgets personalizados
+  Future<Widget> listViewDisps() async{ //Lista de dispositivos encontrados - BLE
     return SizedBox(
-      height: 300.0, // Change as per your requirement
-      width: 300.0, // Change as per your requirement
+      height: 300.0,
+      width: 300.0,
       child: ListView.builder(
         
         scrollDirection: Axis.vertical,
@@ -148,9 +178,10 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     );
   }
   
-  Container testButton(){
+  Container testButton(){ // Botao que envia comandos de teste
     void onchanged(dynamic value){
-      sendCMD(value);
+      if(value != "W") sendCMD(value);
+      else mudarTipoCnx();
     }
 
     return 
@@ -170,6 +201,10 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
             DropdownMenuItem(
               value: "T",
               child: Text("Recebe Const"),
+            ),
+            DropdownMenuItem(
+              value: "W",
+              child: Text("WIFI"),
             ),
           ],
           onChanged: onchanged,
@@ -243,6 +278,24 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     );
   }
   
+  void conectadoEvent(){
+    conectado = true;
+    conectando = false;
+    listening.cancel();
+    serial.text = "";
+    sendCMD("T");
+    btnConnectController.success();
+    Future.delayed(Duration(milliseconds: 2500), (){btnConnectController.stop();});
+  }
+  void conectandoEvent(){
+    conectando = true;
+    conectado = false;
+  }
+  void desconectadoEvent(){
+    conectando = false;
+    conectado = false;
+  }
+
   //Funcoes basicas do Bluetooth Serial 
   Future<void> conectar(int index) async{
     Navigator.pop(context);
@@ -251,27 +304,23 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     conectando = true;
     try{
       bleRobo = dispsBLE[index];
-      print(bleRobo.id);
-      flutterReactiveBle.connectToDevice(id: bleRobo.id/*, withServices: [SERVICE_ID], prescanDuration: Duration(seconds: 2)*/).listen((cnx) async{
-      // Handle connection state updates
+      //print(bleRobo.id);
+      flutterReactiveBle.connectToDevice(id: bleRobo.id).listen((cnx) async{
         if(cnx.connectionState == DeviceConnectionState.connected){
-          conectado = true;
-           conectando = false;
-          listening.cancel();
+          //Trocando prioridade da conexao
           await flutterReactiveBle.requestConnectionPriority(deviceId: bleRobo.id, priority: ConnectionPriority.highPerformance);
           final characteristic = QualifiedCharacteristic(serviceId: SERVICE_ID, characteristicId: CHAR_E_ID, deviceId: bleRobo.id);
+          //Definindo funcao para ser executada a cada atualizacao
           flutterReactiveBle.subscribeToCharacteristic(characteristic).listen((data) {
               readBLE(data);
           }, onError: (dynamic error) {
             
           });
-          serial.text = "";
-          sendCMD("T");
-          btnConnectController.success();
-          Future.delayed(Duration(milliseconds: 2500), (){btnConnectController.stop();});
+          conectadoEvent();
+          
         }
         else if(cnx.connectionState == DeviceConnectionState.connecting){
-            conectado = false;
+            conectandoEvent();
         }
         else if(cnx.connectionState == DeviceConnectionState.disconnected){
           conectado = false;
@@ -280,7 +329,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
             escaneando = true;
             listening = flutterReactiveBle.scanForDevices(withServices: [], scanMode: ScanMode.lowLatency).listen((device) {
               if(!entries.contains(device.name)){
-                entries.add(device.name ?? "<Sem nome>");
+                entries.add(device.name);
                 dispsBLE.add(device);
               }
               if(conectando == true || (conectado == true)){
@@ -293,9 +342,6 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
           btnConnectController.error();
           Future.delayed(Duration(milliseconds: 2500), (){btnConnectController.stop();});
         }
-        
-        print("AQUI");
-        print(cnx.connectionState);
       });
       
     }
@@ -308,6 +354,30 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     conectando = false;
   }
 
+
+  void sendWIFI(String cmd){
+    var DESTINATION_ADDRESS=InternetAddress("192.168.4.1");
+    List<int> data =utf8.encode(cmd);
+    socket?.send(data, DESTINATION_ADDRESS, 8889);
+  }
+  void readWIFI(data) async{
+    if(lendo) return;
+    lendo = true;
+    if(data == ""){
+      lendo = false;
+      return;
+    }
+    serial.text += data.toString().replaceAll(";;;", "");
+    for(String _cmd in data.toString().split(";;;")){
+      if(_cmd == "");
+      else if(_cmd[0] == "T" && (_cmd[1] == ":")){
+        receiveConsts(_cmd);
+      }
+    }
+    lendo = false;
+    setState(() {});
+  }
+  
   void sendBLE(String cmd) async{
     if(conectado){
       final characteristic = QualifiedCharacteristic(serviceId: SERVICE_ID, characteristicId: CHAR_S_ID, deviceId: bleRobo.id); 
@@ -317,7 +387,6 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
       connectDialog();
     }
   }
-
   void readBLE(data) async{
     if(lendo) return;
     lendo = true;
@@ -390,7 +459,12 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
       {cmd = typeCMD;}
 
     if(cmd != ""){
-      sendBLE(cmd);
+      if(tipoCnx == "WIFI"){
+        sendWIFI(cmd);
+      }
+      else{
+        sendBLE(cmd);
+      }
     }
     setState(() {});
   }
@@ -603,7 +677,6 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
           if(conectando == true || (conectado == true)){
             listening.cancel();
             escaneando = false;
-            print("Cancelado");
           }
         });
       
@@ -814,7 +887,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
                     width: 30,
                     primaryColor: Color.fromARGB(255, 0, 0, 0),
                     animateOnTap: false,
-                    child: Icon(Icons.bluetooth, color: corBotAzul,),
+                    child: Icon(tipoCnx == "WIFI"? Icons.wifi : Icons.bluetooth, color: corBotAzul,),
                     
                   )
                 ),

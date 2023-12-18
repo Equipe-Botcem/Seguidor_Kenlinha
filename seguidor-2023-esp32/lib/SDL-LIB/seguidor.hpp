@@ -23,8 +23,10 @@
 using namespace std;
 #ifndef SDL_H
 #define SDL_H
+
 class Seguidor_de_Linha
 {
+    
     private:
         controlador_PID Controlador;
         motor motor_dir;
@@ -36,7 +38,7 @@ class Seguidor_de_Linha
         SimpleKalmanFilter Kalman = SimpleKalmanFilter(0.008,0.008,0.015);
 
         BLECharacteristic * esp_com = NULL;
-
+        string * wifi_saida = NULL;
         unsigned long start_time = 0;
         char modo = 'N';
 
@@ -95,6 +97,7 @@ class Seguidor_de_Linha
         void printEncoders();
         void updateOutput();
         void set_BLE_CHAR(BLECharacteristic * Canal);
+        void set_WIFIBuffer(string * buffer);
         char get_modo();
         int getpin(int pin);
 
@@ -121,6 +124,7 @@ class Seguidor_de_Linha
 
         void teste_frontal();
         void teste_lateral();
+        
         void output(string text, bool new_line =true);
         //calibracao
         void calibracao();

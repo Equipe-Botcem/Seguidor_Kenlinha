@@ -26,12 +26,18 @@ std::string to_string_csd(const T a_value, const int n = 2)
 
 void Seguidor_de_Linha::updateOutput(){
 	unsigned long millis = (esp_timer_get_time()- tmp_ult_cmd)/1000;
-	if(esp_com != NULL && (millis >= 200) && (output_buffer !="")){
-		esp_com->indicate();
-		esp_com->setValue(output_buffer);
+	if((millis >= 200) && (output_buffer !="")){
+		if(esp_com != NULL){
+			esp_com->indicate();
+			esp_com->setValue(output_buffer);
+		}
+		if(wifi_saida != NULL){
+			(*wifi_saida) = output_buffer;
+		}
 		output_buffer = "";
 		tmp_ult_cmd = esp_timer_get_time();
 	}
+
 }
 void Seguidor_de_Linha::output(string text, bool new_line){
 	
@@ -55,7 +61,8 @@ void Seguidor_de_Linha::ControlCMD(string command)
 	const char TESTE_LATERAL = 'L';
 	const char TESTE_FRONTAL = 'F';
 	const char JOYSTICK = 'J';
-	const char TESTE_PWM = 'W';
+	const char TESTE_VCT = 'W';
+	const char TESTE_PWM = 'D';
 	switch (command[0])
 	{
 	case SET:
@@ -83,10 +90,35 @@ void Seguidor_de_Linha::ControlCMD(string command)
 	case JOYSTICK:
 		joystick_control(command);
 		break;
+	case TESTE_VCT:
+		for(unsigned int i = 1; i < command.length(); i++){
+			if(command[i] == ';'){
+				motor_dir.ativar();
+				motor_esq.ativar();
+				setVel(stof(command.substr(1, i)),stof(command.substr(1, i)));
+				if (motor_dir.getVelObj() == 0){
+					motor_dir.desativar();
+					motor_esq.desativar();
+				}
+				break;
+			}
+		}
+		output(to_string(motor_dir.get_velocidade()));
+		break;
 	case TESTE_PWM:
 		for(unsigned int i = 1; i < command.length(); i++){
-			if(command[i] == '|'){
-				setVel(stof(command.substr(1, i)),stof(command.substr(1, i)));
+			if(command[i] == ';'){
+				motor_dir.ativar();
+				motor_esq.ativar();
+				motor_dir.velControl = false;
+				motor_esq.velControl = false;
+				set_velocidade(stoi(command.substr(1, i)),stoi(command.substr(1, i)));
+				if (motor_dir.get_velocidade() == 0){
+					motor_dir.desativar();
+					motor_esq.desativar();
+					motor_dir.velControl = true;
+					motor_esq.velControl = true;
+				}
 				break;
 			}
 		}
@@ -104,7 +136,7 @@ void Seguidor_de_Linha::send_Consts(){
 
 	float Kp = constsPID[0], Ki = constsPID[1], Kd = constsPID[2], K = constsPID[3];
 	
-	int vels[2]; Controlador.get_vel(vels);
+	float vels[2]; Controlador.get_vel(vels);
 
 	int vel_max = vels[0];
 	int vel_min = vels[1];
@@ -177,7 +209,7 @@ void Seguidor_de_Linha::stop(string agente)
 
 void Seguidor_de_Linha::run()
 {
-	//delay(4te000);
+	//vTaskDelay(5000 / portTICK_PERIOD_MS);
 	output("Chamado");
 	setVel(0,0);
 	motor_dir.resetEncoder(); motor_dir.ativar();

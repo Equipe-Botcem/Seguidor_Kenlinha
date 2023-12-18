@@ -7,7 +7,7 @@ class sensor
 private:
     const int resolucao = 4095;
     int pin_dado;
-    int ultima_leitura;
+    volatile int ultima_leitura;
     int valor_max_lido;
     int valor_min_lido;
     float dead_percent;

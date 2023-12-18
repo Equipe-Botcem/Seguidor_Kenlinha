@@ -78,21 +78,24 @@ void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
         erro_perda = 0;
     }
 
-    int v_max = vel_max;
-    int v_min = vel_min;
+    float v_max = vel_max;
+    float v_min = vel_min;
+
+    if(abs(erro) > 2) v_max = 2.5;
     /*if (esp_timer_get_time()/1000 - start_time < 1000) {
         v_max = 5000;
         v_min = -5000;
     }*/
 
     //mapeamento
+    if (cont_local >= 40) cont_local = 39;
     if(seguir_mapa){
         if (mapa[cont_local] + mapa[cont_local +1] <= m_dir->getPosicao()){
             cont_local += 2;
             m_dir->resetEncoder();
         }
-        else if (mapa[cont_local] - 34 <= m_dir->getPosicao() && (mapa[cont_local] != 0)){
-            v_max = 2;
+        else if (mapa[cont_local] - 100 <= m_dir->getPosicao() && (mapa[cont_local] != 0)){
+            v_max = 3;
             //v_min = -3000;
         }
         
@@ -113,6 +116,7 @@ void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
             m_esq->resetEncoder();
             cont_local++;
         }
+        
     }
     /*printf("%i %i\n", v_max,v_min);
     printf("%i %i\n", cont_local,mapa[cont_local]);
@@ -212,12 +216,12 @@ void controlador_PID::reset(){
     }
 }
 
-void controlador_PID::set_vel(int v_max, int v_min){
+void controlador_PID::set_vel(float v_max, float v_min){
     vel_max = v_max;
 	vel_min = v_min;
 }
 
-void controlador_PID::get_vel(int * vetor){
+void controlador_PID::get_vel(float * vetor){
     vetor[0] = vel_max;
 	vetor[1] = vel_min;
 }
