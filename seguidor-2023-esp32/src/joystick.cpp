@@ -4,6 +4,10 @@
 using namespace std;
 void Seguidor_de_Linha::joystick_control(string cmd){
     if(Estado_corrida) return;
+    if(modo != 'J'){
+        motor_dir.ativar();
+        motor_esq.ativar();
+    }
     modo = 'J';
 	float dados[4];
 	int cont = 0;
@@ -19,37 +23,39 @@ void Seguidor_de_Linha::joystick_control(string cmd){
 		}
 	}
 	float x = dados[0], y = dados[1], raio = dados[2];
-    if(x == 0 && (y == 0)){
+    if(abs(x) <= 5 && (abs(y) <= 5)){
         set_direcao('B');
-        set_velocidade(0,0);
+        setVel(0,0);
+        motor_dir.desativar();
+        motor_esq.desativar();
         modo = 'B';
         return;
     }
     
-    int vel_max_joystick = 6000;
+    int vel_max_joystick = 2;
     float fat_drc = y/raio;
     float fat_rot = x/raio;
 
-    int vel_drc = -fat_drc * vel_max_joystick + (-fat_drc > 0? 50:-50);
-    int vel_rot = -fat_rot * vel_max_joystick + (-fat_rot > 0? 50:-50);
+    float vel_drc = -fat_drc * vel_max_joystick + (-fat_drc > 0? 0.5:-0.5);
+    float vel_rot = -fat_rot * vel_max_joystick + (-fat_rot > 0? 0.5:-0.5);
 
 
 	set_direcao('F');
     if(abs(fat_rot) < 0.1){
-        vel_drc +=(-fat_drc > 0? 50:-50);
-        set_velocidade(vel_drc, vel_drc);
+        vel_drc +=(-fat_drc > 0? 0.5:-0.5);
+        setVel(vel_drc, vel_drc);
     }
     else if(abs(fat_drc) < 0.1){
-        set_velocidade(vel_rot, -vel_rot);
+        setVel(vel_rot, -vel_rot);
     }
     else if(vel_rot > 0){
-        set_velocidade(vel_drc + vel_rot, vel_drc);
+        setVel(vel_drc + vel_rot, vel_drc);
     }
     else{
-        set_velocidade(vel_drc, vel_drc -vel_rot);
+        setVel(vel_drc, vel_drc -vel_rot);
     }
     
     
     //delay(50);
-    vTaskDelay(10/portTICK_PERIOD_MS);
+    //vTaskDelay(10/portTICK_PERIOD_MS);
 }

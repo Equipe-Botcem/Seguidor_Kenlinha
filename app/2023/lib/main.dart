@@ -58,6 +58,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   Color corBotAzul = Color.fromARGB(255, 0, 255, 255);
 
   String tipoCnx = "BLE";
+  List<String> FilaCMD = [];
 
   //Variaveis para o fucionamento do bluetooth serial
   final Uuid SERVICE_ID = Uuid.parse("4cc35f22-1978-41da-b944-ac9fdc39b747");
@@ -77,6 +78,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   bool conectando = false;
   bool conectado = false;
   bool lendo = false;
+  bool enviando = false;
   static bool escaneando = false;
   var listening;
   
@@ -103,6 +105,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     else{
       INIT_WIFI();
     }
+    
     initial = false;
   }
 
@@ -314,7 +317,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
           flutterReactiveBle.subscribeToCharacteristic(characteristic).listen((data) {
               readBLE(data);
           }, onError: (dynamic error) {
-            
+            print(error);
           });
           conectadoEvent();
           
@@ -325,7 +328,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
         else if(cnx.connectionState == DeviceConnectionState.disconnected){
           conectado = false;
           conectando = false;
-          if(escaneando == false){
+          /*if(escaneando == false){
             escaneando = true;
             listening = flutterReactiveBle.scanForDevices(withServices: [], scanMode: ScanMode.lowLatency).listen((device) {
               if(!entries.contains(device.name)){
@@ -338,7 +341,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
                 print("Cancelado");
               }
             });
-          }
+          }*/
           btnConnectController.error();
           Future.delayed(Duration(milliseconds: 2500), (){btnConnectController.stop();});
         }
@@ -380,8 +383,24 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   
   void sendBLE(String cmd) async{
     if(conectado){
+      if(enviando){
+        
+        if(cmd.contains("J:")){
+          if(FilaCMD.length >= 2){
+            FilaCMD.remove(FilaCMD.first);
+          }
+          FilaCMD.add(cmd);
+        }
+        return;
+      } 
+      enviando = true;
       final characteristic = QualifiedCharacteristic(serviceId: SERVICE_ID, characteristicId: CHAR_S_ID, deviceId: bleRobo.id); 
       await flutterReactiveBle.writeCharacteristicWithResponse(characteristic, value: utf8.encode(cmd));
+      enviando = false;
+      if(FilaCMD.isEmpty == false){
+          sendCMD(FilaCMD.first);
+          FilaCMD.remove(FilaCMD.first);
+      }
     }
     else{
       connectDialog();
@@ -842,7 +861,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
               base: Container(height: 280, width: 280, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.transparent),),
               stick: Container(height: 130, width: 130, decoration: BoxDecoration(shape: BoxShape.circle, color: corBotAzul),),
               mode: JoystickMode.all,
-              period: Duration(milliseconds: 100),
+              period: Duration(milliseconds: 1),
               listener: (details) {
                 setState(() {
 
@@ -852,6 +871,9 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
                   _x = 0 + step * details.x;
                   _y = 0 + step * details.y;
                 });
+              },
+              onStickDragEnd: (){
+                sendCMD("J:0,0,$step;");
               },
             ),
           ],

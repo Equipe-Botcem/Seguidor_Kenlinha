@@ -107,13 +107,13 @@ extern "C" void app_main(void)
     
     //intr
     gpio_install_isr_service(0);
-    gpio_isr_handler_add((gpio_num_t)16, enc1, (void*) 0);
-    gpio_isr_handler_add((gpio_num_t)17, enc2, (void*) 0);
+    gpio_isr_handler_add((gpio_num_t)37, enc1, (void*) 0);
+    gpio_isr_handler_add((gpio_num_t)36, enc2, (void*) 0);
     
     //ini
     commMutex = xSemaphoreCreateMutex();
     BLE_INIT();
-    //WIFI_INIT(); -> Portas ADC2 devem estar sem uso
+    //WIFI_INIT();// -> Portas ADC2 devem estar sem uso
     //UDP_INIT();
     continuous_adc_INIT();
     cont_time = esp_timer_get_time();
@@ -127,15 +127,19 @@ extern "C" void app_main(void)
             cont_time = esp_timer_get_time();
             printf("%i\n", cont_leituras);
             cont_leituras = 0;
-            seguidor.printEncoders();
+            //seguidor.printEncoders();
         }
-		if (seguidor.Estado_corrida && leitura_atualizada){
-            seguidor.seguir_linha();
-            leitura_atualizada = false;
+		if (seguidor.Estado_corrida){
+            if(leitura_atualizada){
+                seguidor.seguir_linha();
+                leitura_atualizada = false;
+            }
+            else if(seguidor.get_modo() != 'B' && (seguidor.get_modo() != 'J')){
+			    seguidor.stop("Loop");
+		    }
+            
 		}
-		else if(seguidor.get_modo() != 'B' && (seguidor.get_modo() != 'J')){
-			seguidor.stop("Loop");
-		}
+		
         seguidor.loop();
         if(xSemaphoreTake(commMutex, 0) == pdTRUE){
             if(wbuffer_ent != ""){
@@ -246,21 +250,19 @@ void BLE_INIT(){
                 CHARACTERISTIC_S_UUID,
                 NIMBLE_PROPERTY::READ |
                 NIMBLE_PROPERTY::WRITE |
-                NIMBLE_PROPERTY::NOTIFY |
-                NIMBLE_PROPERTY::INDICATE
-            ,4096);
+                NIMBLE_PROPERTY::NOTIFY 
+            ,1024);
 
-    pSaida->setValue("");
+    
 
     pEntrada = pService->createCharacteristic(
                     CHARACTERISTIC_E_UUID,
                     NIMBLE_PROPERTY::READ |
                     NIMBLE_PROPERTY::WRITE |
-                    NIMBLE_PROPERTY::NOTIFY |
-                    NIMBLE_PROPERTY::INDICATE
-                ,4096);
+                    NIMBLE_PROPERTY::NOTIFY 
+                ,1024);
 
-    pEntrada->setValue("");
+    
 
     pService->start();
     pAdvertising = BLEDevice::getAdvertising();
@@ -268,6 +270,9 @@ void BLE_INIT(){
     pAdvertising->setScanResponse(true);
     
     BLEDevice::startAdvertising();
+   
+    pSaida->setValue("");
+    pEntrada->setValue("");
     seguidor.set_BLE_CHAR(pSaida);
 }
 

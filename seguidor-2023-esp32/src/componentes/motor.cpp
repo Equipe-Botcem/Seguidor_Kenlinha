@@ -62,6 +62,7 @@ void motor::set_pins(ledc_channel_t p1, ledc_channel_t p2, int gp1, int gp2, int
     };
     gpio_config(&en1);
     gpio_config(&en2);
+    printf("Conf\n");
 
 
 }
@@ -132,8 +133,9 @@ void motor::encoder(){
 void motor::teste(string *teste){
 
     * teste  = (
-        to_string(vel_real) + " -> " + to_string(vel_objetivo) + " m/s\n"+
-        "Integral: " + to_string(erro_I)
+        //to_string(posicao)
+        to_string(vel_real) + " -> " + to_string(vel_objetivo) + " m/s"/*+
+        "Integral: " + to_string(erro_I)*/
     );
 }
 void motor::updateVel(){
