@@ -108,16 +108,21 @@ extern "C" void app_main(void)
     gpio_install_isr_service(0);
     gpio_isr_handler_add((gpio_num_t)37, enc1, (void*) 0);
     gpio_isr_handler_add((gpio_num_t)36, enc2, (void*) 0);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
     
     //ini
     commMutex = xSemaphoreCreateMutex();
     //BLE_INIT();
     WIFI_INIT();
+    vTaskDelay(100 / portTICK_PERIOD_MS);
     UDP_INIT();
+    vTaskDelay(100 / portTICK_PERIOD_MS);
     continuous_adc_INIT();
+    vTaskDelay(100 / portTICK_PERIOD_MS);
     cont_time = esp_timer_get_time();
 
     seguidor.init();
+    vTaskDelay(100 / portTICK_PERIOD_MS);
     seguidor.output(Robo + " pronto!");
     long tmp_comeco = 0;
     long tmp_acc = 0;
