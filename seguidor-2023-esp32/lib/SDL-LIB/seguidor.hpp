@@ -23,10 +23,8 @@
 using namespace std;
 #ifndef SDL_H
 #define SDL_H
-
 class Seguidor_de_Linha
 {
-    
     private:
         controlador_PID Controlador;
         motor motor_dir;
@@ -39,6 +37,7 @@ class Seguidor_de_Linha
 
         BLECharacteristic * esp_com = NULL;
         string * wifi_saida = NULL;
+
         unsigned long start_time = 0;
         char modo = 'N';
 
@@ -65,8 +64,8 @@ class Seguidor_de_Linha
 
         //10 13 17 26 28 29 27 14 , 24 , 15 lampedrao adcnum
         int pinos[15] = {ADC_CHANNEL_0,ADC_CHANNEL_3,ADC_CHANNEL_7,ADC_CHANNEL_6,ADC_CHANNEL_8,ADC_CHANNEL_9, ADC_CHANNEL_7, ADC_CHANNEL_4, ADC_CHANNEL_4, ADC_CHANNEL_5,
-                            45,0,48,21,47};
-        int pinos_ventoinha[5] = {2,42,46,40,39};
+                            0,45,48,21,47};
+        int pinos_ventoinha[5] = {2,42,36,40,39};
         
         string output_buffer;
 
@@ -124,7 +123,6 @@ class Seguidor_de_Linha
 
         void teste_frontal();
         void teste_lateral();
-        
         void output(string text, bool new_line =true);
         //calibracao
         void calibracao();

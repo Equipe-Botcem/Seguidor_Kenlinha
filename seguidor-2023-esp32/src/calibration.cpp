@@ -4,7 +4,7 @@
 #include "esp_timer.h"
 int Seguidor_de_Linha::sensor_calib(int pos){
 
-	int vel_calib =3000; 
+	int vel_calib =2500; 
 	// pos = 0: sensores frontais em qualquer lugar na frente da linha branca
 	// pos = 1: sensores laterais
 	if (pos == 0){
@@ -65,7 +65,7 @@ int Seguidor_de_Linha::sensor_calib(int pos){
 }
 void Seguidor_de_Linha::calibracao()
 {
-	int vel_calib =3000; 
+	int vel_calib =2500; 
 	//iniciando interrupcao sem pausa
 	ler_sensores_sem_pausa = true;
 	ler_sensores_fast = false;

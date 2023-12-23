@@ -122,8 +122,6 @@ void Seguidor_de_Linha::ControlCMD(string command)
 				break;
 			}
 		}
-		output(to_string(motor_dir.get_velocidade()));
-		break;
 	default:
 		output("Comando não reconhecido.");	
 		break;
@@ -138,8 +136,8 @@ void Seguidor_de_Linha::send_Consts(){
 	
 	float vels[2]; Controlador.get_vel(vels);
 
-	int vel_max = vels[0];
-	int vel_min = vels[1];
+	float vel_max = vels[0];
+	float vel_min = vels[1];
 	float TOL = sns_frontais.get_tol();
 
 	output("T: Constantes: " + to_string_csd(Kp) + "|"+ to_string_csd(Ki)+"|"+to_string_csd(Kd)+"|"+to_string(vel_min)+"|"+to_string(vel_max)+"|"+
@@ -209,7 +207,7 @@ void Seguidor_de_Linha::stop(string agente)
 
 void Seguidor_de_Linha::run()
 {
-	//vTaskDelay(5000 / portTICK_PERIOD_MS);
+	//delay(4te000);
 	output("Chamado");
 	setVel(0,0);
 	motor_dir.resetEncoder(); motor_dir.ativar();

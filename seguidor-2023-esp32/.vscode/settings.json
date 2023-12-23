@@ -15,11 +15,7 @@
         "istream": "cpp",
         "numeric": "cpp",
         "ostream": "cpp",
-        "streambuf": "cpp",
-        "sys.h": "c",
-        "errno.h": "c",
-        "err.h": "c",
-        "opt.h": "c"
+        "streambuf": "cpp"
     },
     "idf.adapterTargetName": "esp32"
 }

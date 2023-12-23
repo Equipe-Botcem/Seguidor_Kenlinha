@@ -81,6 +81,8 @@ void BLE_INIT();
 void WIFI_INIT();
 void UDP_INIT();
 void communication(void * args);
+void readUartBLE();
+
 //Leituras
 void continuous_adc_INIT();
 unsigned int tempo_passado = 0;
@@ -90,21 +92,18 @@ unsigned long cont_time = 0;
 
 //funcoes de intr
 void enc1(void*arg){
-    
     seguidor.intr_enc_dir();
 }
 void enc2(void*arg){
     seguidor.intr_enc_esq();
 }
+
 extern "C" void app_main(void)
 {
     nvs_flash_init();
-    
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
-    esp_netif_init();
     vTaskDelay(1000 / portTICK_PERIOD_MS);
     //nvs_flash_init_partition("storage");
-    
+
     //intr
     gpio_install_isr_service(0);
     gpio_isr_handler_add((gpio_num_t)37, enc1, (void*) 0);
@@ -112,35 +111,78 @@ extern "C" void app_main(void)
     
     //ini
     commMutex = xSemaphoreCreateMutex();
-    BLE_INIT();
-    //WIFI_INIT();// -> Portas ADC2 devem estar sem uso
-    //UDP_INIT();
+    //BLE_INIT();
+    WIFI_INIT();
+    UDP_INIT();
     continuous_adc_INIT();
     cont_time = esp_timer_get_time();
 
     seguidor.init();
     seguidor.output(Robo + " pronto!");
-    //main loop
+    long tmp_comeco = 0;
+    long tmp_acc = 0;
+    long tmp_ini_stop = 0;
+    bool TwoSec = false;
     xTaskCreatePinnedToCore(communication,"Comunicacao", 2048, NULL,4,NULL,1);
+    //main loop
     while(1) {  
-        if(esp_timer_get_time() - cont_time >= 1000000){
+        
+        if(esp_timer_get_time() - cont_time >= 250000){
             cont_time = esp_timer_get_time();
-            printf("%i\n", cont_leituras);
             cont_leituras = 0;
             //seguidor.printEncoders();
+            if (seguidor.Estado_corrida == true){
+                seguidor.printEncoders();
+            }
         }
-		if (seguidor.Estado_corrida){
+        if(tmp_ini_stop != 0 && (abs(seguidor.getVelDir()) < 0.10) && (abs(seguidor.getVelEsq()) < 0.10)){
+            seguidor.output("Tempo:" + to_string(esp_timer_get_time() - tmp_ini_stop));
+            tmp_ini_stop = 0;
+            //seguidor.printEncoders();
+            
+        }
+        if(tmp_acc > 0 && (abs(seguidor.getVelDir()) >= 1)){
+            seguidor.output("Tempo:" + to_string(esp_timer_get_time() - tmp_acc));
+            tmp_acc = 0;
+            //seguidor.printEncoders();
+            
+        }
+
+		if (seguidor.Estado_corrida == true){
+            /*f(tmp_comeco == 0){
+                seguidor.setVel(1,1);
+                //seguidor.set_velocidade(2800,0);
+
+                tmp_comeco = esp_timer_get_time();
+                tmp_acc = tmp_comeco;
+            }
+            else if((esp_timer_get_time() - tmp_comeco >= 4000000) && !TwoSec){
+                seguidor.printEncoders();
+                TwoSec = true;
+
+            }
+            else if((esp_timer_get_time() - tmp_comeco >= 8000000)){
+                if(seguidor.getDir() != 'P'){
+                    seguidor.printEncoders();
+                    tmp_ini_stop = esp_timer_get_time();
+                    seguidor.set_direcao('P');
+                    
+                    //seguidor.output("Inicio Parada");
+                    
+                }
+            }*/
+            
             if(leitura_atualizada){
                 seguidor.seguir_linha();
+                cont_leituras++;
                 leitura_atualizada = false;
             }
-            else if(seguidor.get_modo() != 'B' && (seguidor.get_modo() != 'J')){
-			    seguidor.stop("Loop");
-		    }
-            
+			
 		}
-		
-        seguidor.loop();
+		else if(seguidor.get_modo() != 'B' && (seguidor.get_modo() != 'J')){
+			seguidor.stop("Loop");
+		}
+        //readUartBLE();
         if(xSemaphoreTake(commMutex, 0) == pdTRUE){
             if(wbuffer_ent != ""){
                 seguidor.ControlCMD(wbuffer_ent);
@@ -152,8 +194,7 @@ extern "C" void app_main(void)
             }
             xSemaphoreGive(commMutex);
         }
-        
-       cont_leituras++; 
+        seguidor.loop();
     }
 }
 
@@ -223,6 +264,61 @@ static void continuous_adc_init(adc_channel_t *channel, uint8_t channel_num, adc
     *out_handle = handle;
 }
 
+void readUartBLE(){
+    uint8_t letra;
+    while(!esp_rom_uart_rx_one_char(&letra)){
+        cmd += (char)letra;
+        tmp_uart = esp_timer_get_time();
+    }
+    unsigned int tempo_passado = (esp_timer_get_time() - tmp_uart)/1000;
+    if(strcmp(pEntrada->getValue().c_str(),"")){
+        cmd = pEntrada->getValue().c_str();
+        pEntrada->setValue("");
+        tempo_passado = 11;
+    }
+
+    if(cmd != "" && (tempo_passado >= 10)){
+        seguidor.ControlCMD(cmd);
+        cmd = "";
+    }
+}
+
+void BLE_INIT(){
+    //BLE
+    BLEDevice::init(Robo);
+    BLEDevice::setMTU(512);
+    
+    pServer = BLEDevice::createServer();
+    pService = pServer->createService(SERVICE_UUID);
+    pSaida = pService->createCharacteristic(
+                CHARACTERISTIC_S_UUID,
+                NIMBLE_PROPERTY::READ |
+                NIMBLE_PROPERTY::WRITE |
+                NIMBLE_PROPERTY::NOTIFY |
+                NIMBLE_PROPERTY::INDICATE
+            ,4096);
+
+    pSaida->setValue("");
+
+    pEntrada = pService->createCharacteristic(
+                    CHARACTERISTIC_E_UUID,
+                    NIMBLE_PROPERTY::READ |
+                    NIMBLE_PROPERTY::WRITE |
+                    NIMBLE_PROPERTY::NOTIFY |
+                    NIMBLE_PROPERTY::INDICATE
+                ,4096);
+
+    pEntrada->setValue("");
+
+    pService->start();
+    pAdvertising = BLEDevice::getAdvertising();
+    pAdvertising->addServiceUUID(SERVICE_UUID);
+    pAdvertising->setScanResponse(true);
+    
+    BLEDevice::startAdvertising();
+    seguidor.set_BLE_CHAR(pSaida);
+}
+
 void continuous_adc_INIT(){
     memset(result, 0xcc, Tamanho_Leitura);
     s_task_handle = xTaskGetCurrentTaskHandle();
@@ -235,47 +331,6 @@ void continuous_adc_INIT(){
     ESP_ERROR_CHECK(adc_continuous_register_event_callbacks(handle, &cbs, NULL));
     ESP_ERROR_CHECK(adc_continuous_start(handle));
 }
-
-
-
-void BLE_INIT(){
-    //BLE
-    active_cmc += "B";
-    BLEDevice::init(Robo);
-    BLEDevice::setMTU(512);
-    
-    pServer = BLEDevice::createServer();
-    pService = pServer->createService(SERVICE_UUID);
-    pSaida = pService->createCharacteristic(
-                CHARACTERISTIC_S_UUID,
-                NIMBLE_PROPERTY::READ |
-                NIMBLE_PROPERTY::WRITE |
-                NIMBLE_PROPERTY::NOTIFY 
-            ,1024);
-
-    
-
-    pEntrada = pService->createCharacteristic(
-                    CHARACTERISTIC_E_UUID,
-                    NIMBLE_PROPERTY::READ |
-                    NIMBLE_PROPERTY::WRITE |
-                    NIMBLE_PROPERTY::NOTIFY 
-                ,1024);
-
-    
-
-    pService->start();
-    pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->addServiceUUID(SERVICE_UUID);
-    pAdvertising->setScanResponse(true);
-    
-    BLEDevice::startAdvertising();
-   
-    pSaida->setValue("");
-    pEntrada->setValue("");
-    seguidor.set_BLE_CHAR(pSaida);
-}
-
 static void wifi_event_handler(void* arg, esp_event_base_t event_base,
                                     int32_t event_id, void* event_data)
 {
@@ -385,14 +440,14 @@ void communication(void *args){
                 tmp_uart = esp_timer_get_time();
             }
             tempo_passado = (esp_timer_get_time() - tmp_uart)/1000;
-            if(active_cmc == "B" || active_cmc == "BW"){
+            if(active_cmc == "B"){
                 if(strcmp(pEntrada->getValue().c_str(),"") != 0){
                     cmd = pEntrada->getValue().c_str();
                     pEntrada->setValue("");
                     tempo_passado = 11;
                 }
             }
-            if(active_cmc == "BW" || active_cmc == "W"){
+            if(active_cmc == "W"){
                 
                 if(sock >= 0){
                     struct sockaddr_storage source_addr;
@@ -439,6 +494,7 @@ void communication(void *args){
         
     }
 }
+
 
 
 

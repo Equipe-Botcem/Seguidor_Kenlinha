@@ -18,7 +18,7 @@ Seguidor_de_Linha::Seguidor_de_Linha()
 	motor_dir.set_pins(LEDC_CHANNEL_0, LEDC_CHANNEL_1, pinos[10], pinos[11], 37, 38);  
 	gpio_set_direction((gpio_num_t)pinos[12], GPIO_MODE_OUTPUT);    
     gpio_set_level((gpio_num_t)pinos[12], 1);          
-	motor_esq.set_pins(LEDC_CHANNEL_2, LEDC_CHANNEL_3, pinos[14], pinos[13], 36, 35);
+	motor_esq.set_pins(LEDC_CHANNEL_2, LEDC_CHANNEL_3, pinos[13], pinos[14], 36, 35);
 
 	//ventoinhas
 	
