@@ -1,19 +1,21 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'dart:convert';
-import 'package:flutter/services.dart';
+import 'dart:io' show Platform;
+import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:controle/hive_config.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:flutter_reactive_ble/flutter_reactive_ble.dart';
 import 'package:hive_flutter/adapters.dart';
 import 'package:loading_icon_button/loading_icon_button.dart';
 import 'package:flutter_joystick/flutter_joystick.dart';
+import 'package:esp_smartconfig/esp_smartconfig.dart';
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setPreferredOrientations(
-    [DeviceOrientation.portraitUp]);
   await HiveConfig.start();
   runApp(const MainApp());
 }
@@ -37,19 +39,10 @@ class MainPage extends StatefulWidget {
 
 class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
 
-  //Objetos para o fucionamento do bluetooth serial
-  FlutterBluetoothSerial serialBLE = FlutterBluetoothSerial.instance;
-  BluetoothConnection? cnx;
-  BluetoothDevice bleRobo = BluetoothDevice(address: "");
-  List<BluetoothDevice> dispsBLE = List<BluetoothDevice>.empty(growable: true);
-
-  bool conectando = false;
-  
+  //UI e UX
   late final TabController tabController = TabController(length: 3, vsync: this);
-
   final LoadingButtonController btnConnectController = LoadingButtonController();
 
-  //Controladores dos campos de escrita
   final TextEditingController mapa = TextEditingController();
   final TextEditingController serial = TextEditingController();
   final TextEditingController KI = TextEditingController();
@@ -62,7 +55,37 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   final TextEditingController K = TextEditingController();
   final TextEditingController TOL = TextEditingController();
 
-  //Constantes recebidas robo
+  Color corBotAzul = Color.fromARGB(255, 0, 255, 255);
+
+  String tipoCnx = "BLE";
+  List<String> FilaCMD = [];
+
+  //Variaveis para o fucionamento do bluetooth serial
+  final Uuid SERVICE_ID = Uuid.parse("4cc35f22-1978-41da-b944-ac9fdc39b747");
+  final Uuid CHAR_E_ID =  Uuid.parse("016210bb-89a6-41af-9db9-2cef7bdf36eb");
+  final Uuid CHAR_S_ID =  Uuid.parse("92da7b08-bc25-4bfd-b5ac-0e1c722310b1");
+  final flutterReactiveBle = FlutterReactiveBle();
+  late DiscoveredDevice bleRobo;
+  List<DiscoveredDevice> dispsBLE = List<DiscoveredDevice>.empty(growable: true);
+   List<String> entries = List.empty(growable: true);
+
+  // Variaveis para WIFI
+  RawDatagramSocket? socket;
+
+
+  //Status
+  bool initial = true;
+  bool conectando = false;
+  bool conectado = false;
+  bool lendo = false;
+  bool enviando = false;
+  static bool escaneando = false;
+  var listening;
+  
+  //Hive - Banco de dados
+  static String actualBox = "";
+
+  //Constantes recebidas do robo
   static String KI_robot = "";
   static String KP_robot = "";
   static String KD_robot = "";
@@ -73,26 +96,49 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   static String TOL_robot = "";
   static bool USE_MAP = false;
 
-  //Hive
-  static String actualBox = "";
-
   //Joystick
   double _x = 0, _y = 0, step = 100;
 
-  bool initial = true;
-  bool atual_const = false;
+  //Inicio App
   MainPageState(){
     if(!initial) setState((){});
+    else{
+      INIT_WIFI();
+    }
+    
     initial = false;
   }
 
-  Color corBotAzul = Color.fromARGB(255, 0, 255, 255);
+  //wifi
+  
+  void INIT_WIFI() async{
+    if(socket !=null) return;
+    socket = await RawDatagramSocket.bind(InternetAddress.anyIPv4, 8889);
+    socket?.broadcastEnabled = true;
+
+    socket?.listen((RawSocketEvent event) {
+      if (event == RawSocketEvent.read) {
+        Datagram? datagram = socket?.receive();
+        if (datagram != null) {
+          String message = utf8.decode(datagram.data);
+          // Handle the received message
+          readWIFI(message);
+        }
+      }
+    });
+  }
+  void mudarTipoCnx() async{
+    if(tipoCnx != "BLE") tipoCnx = "BLE";
+    else tipoCnx = "WIFI";
+    setState(() {});
+    
+  }
+  
   //Funcoes para interface e teste
-  Future<bool> backAndroid() async{
+  Future<bool> backAndroid() async{ //Altera o comportamento do comando "voltar" do android
     setState((){});
     
     if(conectando){
-      cnx?.dispose();
       conectando = false;
       btnConnectController.stop();
     }
@@ -102,7 +148,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     return false;
   } 
 
-  void showMsg(String text, BuildContext context){
+  void showMsg(String text, BuildContext context){ // Exibe uma mensagem
     showDialog(context: context,builder: (context) {
         return AlertDialog(
           content: Text(text),
@@ -110,18 +156,12 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
       }
     );
   }
-  //Custom Widgets
-  Future<Widget> listViewDisps() async{
-    List<String> entries = List.empty(growable: true);
-    await serialBLE.getBondedDevices().then((list) {
-      dispsBLE = list;
-      for(BluetoothDevice disp in list){
-        entries.add(disp.name ?? "<Sem nome>");
-      }
-    });
+
+  //Widgets personalizados
+  Future<Widget> listViewDisps() async{ //Lista de dispositivos encontrados - BLE
     return SizedBox(
-      height: 300.0, // Change as per your requirement
-      width: 300.0, // Change as per your requirement
+      height: 300.0,
+      width: 300.0,
       child: ListView.builder(
         
         scrollDirection: Axis.vertical,
@@ -141,9 +181,10 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     );
   }
   
-  Container testButton(){
+  Container testButton(){ // Botao que envia comandos de teste
     void onchanged(dynamic value){
-      sendCMD(value);
+      if(value != "W") sendCMD(value);
+      else mudarTipoCnx();
     }
 
     return 
@@ -163,6 +204,10 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
             DropdownMenuItem(
               value: "T",
               child: Text("Recebe Const"),
+            ),
+            DropdownMenuItem(
+              value: "W",
+              child: Text("WIFI"),
             ),
           ],
           onChanged: onchanged,
@@ -188,20 +233,6 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
 
   Container campoConst(String nome, TextEditingController ctrl, {String vlAtual = "", int flex = 1}){
     double sfont = 18;
-    if(atual_const){
-      return Container(margin: EdgeInsets.only(bottom: 5), padding: EdgeInsets.all(8), decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Color.fromRGBO(0, 0, 0, 1)), child:
-      Column( children:[
-        Container(
-          decoration: BoxDecoration(borderRadius: BorderRadius.circular(30),color: corBotAzul,),
-          margin: EdgeInsets.all(8),
-          padding: EdgeInsets.all(3),
-          
-          width: double.infinity,
-          child: Text(" $nome: $vlAtual", style: TextStyle(fontSize: 18),),
-        ),
-      ])
-    );
-    }
     return Container(margin: EdgeInsets.only(bottom: 5), padding: EdgeInsets.all(8), decoration: BoxDecoration(borderRadius: BorderRadius.circular(10), color: Color.fromRGBO(0, 0, 0, 1)), child:
       Column( children:[
         Row(
@@ -230,15 +261,14 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
           padding: EdgeInsets.all(3),
           
           width: double.infinity,
-          child: Text(" Atual: $vlAtual", style: TextStyle(fontSize: 18),),
+          child: Text("Atual: $vlAtual", style: TextStyle(fontSize: 18),),
         ),
       ])
     );
   }
 
-  Expanded fillButton(Function onpressed, Widget child, double borderRadius, {int f = 1}){
+  Expanded fillButton(Function onpressed, Widget child, double borderRadius){
     return Expanded( 
-      flex: f,
       child: ElevatedButton(
         onPressed: () => onpressed(),
         style: ElevatedButton.styleFrom(
@@ -251,6 +281,24 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     );
   }
   
+  void conectadoEvent(){
+    conectado = true;
+    conectando = false;
+    listening.cancel();
+    serial.text = "";
+    sendCMD("T");
+    btnConnectController.success();
+    Future.delayed(Duration(milliseconds: 2500), (){btnConnectController.stop();});
+  }
+  void conectandoEvent(){
+    conectando = true;
+    conectado = false;
+  }
+  void desconectadoEvent(){
+    conectando = false;
+    conectado = false;
+  }
+
   //Funcoes basicas do Bluetooth Serial 
   Future<void> conectar(int index) async{
     Navigator.pop(context);
@@ -259,39 +307,123 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     conectando = true;
     try{
       bleRobo = dispsBLE[index];
-      cnx = await BluetoothConnection.toAddress(bleRobo.address);
-      cnx?.input!.listen((data) { readBLE(data); });
-           
-      serial.text = "";
-      sendCMD("T");
-      btnConnectController.success(); 
-      Future.delayed(Duration(milliseconds: 2500), (){btnConnectController.stop();});
+      //print(bleRobo.id);
+      flutterReactiveBle.connectToDevice(id: bleRobo.id).listen((cnx) async{
+        if(cnx.connectionState == DeviceConnectionState.connected){
+          //Trocando prioridade da conexao
+          await flutterReactiveBle.requestConnectionPriority(deviceId: bleRobo.id, priority: ConnectionPriority.highPerformance);
+          final characteristic = QualifiedCharacteristic(serviceId: SERVICE_ID, characteristicId: CHAR_E_ID, deviceId: bleRobo.id);
+          //Definindo funcao para ser executada a cada atualizacao
+          flutterReactiveBle.subscribeToCharacteristic(characteristic).listen((data) {
+              readBLE(data);
+          }, onError: (dynamic error) {
+            print(error);
+          });
+          conectadoEvent();
+          
+        }
+        else if(cnx.connectionState == DeviceConnectionState.connecting){
+            conectandoEvent();
+        }
+        else if(cnx.connectionState == DeviceConnectionState.disconnected){
+          conectado = false;
+          conectando = false;
+          /*if(escaneando == false){
+            escaneando = true;
+            listening = flutterReactiveBle.scanForDevices(withServices: [], scanMode: ScanMode.lowLatency).listen((device) {
+              if(!entries.contains(device.name)){
+                entries.add(device.name);
+                dispsBLE.add(device);
+              }
+              if(conectando == true || (conectado == true)){
+                listening.cancel();
+                escaneando = false;
+                print("Cancelado");
+              }
+            });
+          }*/
+          btnConnectController.error();
+          Future.delayed(Duration(milliseconds: 2500), (){btnConnectController.stop();});
+        }
+      });
       
     }
     catch(erro){
       btnConnectController.error();
+      showMsg(erro.toString(), context);
       Future.delayed(Duration(milliseconds: 2500), (){btnConnectController.stop();});
     }
     setState((){});
     conectando = false;
   }
 
+
+  void sendWIFI(String cmd){
+    var DESTINATION_ADDRESS=InternetAddress("192.168.4.1");
+    List<int> data =utf8.encode(cmd);
+    socket?.send(data, DESTINATION_ADDRESS, 8889);
+  }
+  void readWIFI(data) async{
+    if(lendo) return;
+    lendo = true;
+    if(data == ""){
+      lendo = false;
+      return;
+    }
+    serial.text += data.toString().replaceAll(";;;", "");
+    for(String _cmd in data.toString().split(";;;")){
+      if(_cmd == "");
+      else if(_cmd[0] == "T" && (_cmd[1] == ":")){
+        receiveConsts(_cmd);
+      }
+    }
+    lendo = false;
+    setState(() {});
+  }
+  
   void sendBLE(String cmd) async{
-    await cnx?.output.allSent;
-    if(cnx?.isConnected == true){
-      cnx?.output.add(ascii.encode(cmd));
+    if(conectado){
+      if(enviando){
+        
+        if(cmd.contains("J:")){
+          if(FilaCMD.length >= 2){
+            FilaCMD.remove(FilaCMD.first);
+          }
+          FilaCMD.add(cmd);
+        }
+        return;
+      } 
+      enviando = true;
+      final characteristic = QualifiedCharacteristic(serviceId: SERVICE_ID, characteristicId: CHAR_S_ID, deviceId: bleRobo.id); 
+      await flutterReactiveBle.writeCharacteristicWithResponse(characteristic, value: utf8.encode(cmd));
+      enviando = false;
+      if(FilaCMD.isEmpty == false){
+          sendCMD(FilaCMD.first);
+          FilaCMD.remove(FilaCMD.first);
+      }
     }
     else{
       connectDialog();
     }
   }
-
-  void readBLE(data){
-    data = ascii.decode(data);
-    serial.text += "\n${data.toString()}";
-    if(data.toString()[0] == "T"){
-      receiveConsts(data.toString());
+  void readBLE(data) async{
+    if(lendo) return;
+    lendo = true;
+    final characteristic = QualifiedCharacteristic(serviceId: SERVICE_ID, characteristicId: CHAR_E_ID, deviceId: bleRobo.id);
+    final response = await flutterReactiveBle.readCharacteristic(characteristic);
+    data = utf8.decode(response);
+    if(data == ""){
+      lendo = false;
+      return;
     }
+    serial.text += data.toString().replaceAll(";;;", "");
+    for(String _cmd in data.toString().split(";;;")){
+      if(_cmd == "");
+      else if(_cmd[0] == "T" && (_cmd[1] == ":")){
+        receiveConsts(_cmd);
+      }
+    }
+    lendo = false;
     setState(() {});
   }
 
@@ -301,9 +433,8 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   void connectDialog() async{
     btnConnectController.start();
     //Desconectar
-    if(cnx?.isConnected == true){
-      cnx?.dispose();
-      setState((){btnConnectController.stop();});
+    if(conectado){
+      conectado = false;
       return;
     }
 
@@ -343,11 +474,16 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
       {cmd = "F;";}
     else if(typeCMD == "E") 
       {cmd = "E;";}
-    else if(typeCMD[0] == 'J' && (cnx?.isConnected == true)) 
+    else if(typeCMD[0] == 'J' && (conectado)) 
       {cmd = typeCMD;}
 
     if(cmd != ""){
-      sendBLE(cmd);
+      if(tipoCnx == "WIFI"){
+        sendWIFI(cmd);
+      }
+      else{
+        sendBLE(cmd);
+      }
     }
     setState(() {});
   }
@@ -549,19 +685,20 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
   //Tabs
   
   Tab bluetoothTab(){
-    Icon expandir = Icon(Icons.arrow_circle_down);
-    Widget mapa = Padding(padding: EdgeInsets.all(0));
-    if(!atual_const) {
-      expandir = Icon(Icons.arrow_circle_up);
-      mapa = Padding(
-            padding: EdgeInsets.all(8),
-            child: CheckboxListTile(
-              value: USE_MAP,
-              shape: Border.all(),
-              onChanged: (value) => setState((){USE_MAP = (value ?? false);}),
-              title: Text("Usar Mapa"),
-            )
-          );
+    //entries.clear();
+    if(conectando == false && (conectado == false)){
+      escaneando = true;
+      listening = flutterReactiveBle.scanForDevices(withServices: [], scanMode: ScanMode.lowLatency).listen((device) {
+          if(!entries.contains(device.name)){
+            entries.add(device.name ?? "<Sem nome>");
+            dispsBLE.add(device);
+          }
+          if(conectando == true || (conectado == true)){
+            listening.cancel();
+            escaneando = false;
+          }
+        });
+      
     }
     List<Widget> elementos = [
         Column(children: [
@@ -572,7 +709,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
             child: ConstrainedBox(
               constraints: BoxConstraints(
                 minHeight: 50,
-                maxHeight: 200,
+                maxHeight: 130,
               ),
 
               child: SingleChildScrollView(
@@ -592,16 +729,14 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
             ),
           ),
           
-          Padding(
+          /*Padding(
             padding: EdgeInsets.all(8),
             child: Row( children: [
-              IconButton(onPressed: () => sendCMD("T"), icon: Icon(Icons.settings), iconSize: 30,),
               fillButton( () => sendCMD("C"), Text("CALIBRAÇÃO", style: TextStyle(fontSize: 20),), 30),
-              IconButton(onPressed: () => setState(() {atual_const = !atual_const;}), icon: expandir, iconSize: 30,),
               /*SizedBox(width: 10,),
               fillButton( () => sendCMD("T"), Text("RECEBE CONST", style: TextStyle(fontSize: 20),), 30),*/
               ])
-          ),
+          ),*/
           
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -612,21 +747,28 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
                 campoConst("KP", KP, vlAtual: KP_robot),
                 campoConst("KI", KI, vlAtual: KI_robot),
                 campoConst("KD", KD, vlAtual: KD_robot),
-                campoConst("K", K, vlAtual: K_robot),
+                //campoConst("K", K, vlAtual: K_robot),
               ]),
               colunaMetadeTela([
                 campoConst("VEL MAX", VEL_MAX, vlAtual: VEL_MAX_robot),
                 campoConst("VEL MIN", VEL_MIN, vlAtual: VEL_MIN_robot),
-                campoConst("TMP FORA", TMP_FORA, vlAtual: TMP_FORA_robot),
-                campoConst("TOL", TOL, vlAtual: TOL_robot),
+                campoConst("Marcações", TMP_FORA, vlAtual: TMP_FORA_robot),
+                //campoConst("TOL", TOL, vlAtual: TOL_robot),
               ]),
               //ElevatedButton(onPressed: () => {serial.text += "\n\n\n\n\n\n\n\n\n\n\n\nTeste"}, child: Text("Testar Serial"))
             ],
           ),
-          
           //campoConst("MAPA", MAPA, vlAtual: ""),
-          mapa,
-          
+          Padding(
+            padding: EdgeInsets.all(8),
+            child: CheckboxListTile(
+              value: USE_MAP,
+              shape: Border.all(),
+              onChanged: (value) => setState((){USE_MAP = (value ?? false);}),
+              title: Text("Usar Mapa"),
+            )
+          ),
+
           Padding(
             padding: EdgeInsets.all(8),
             child: Row( 
@@ -645,34 +787,39 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
         ],
         ),
         
-        Expanded(child: Text("")),
+        
+        //ElevatedButton(onPressed: () {mapa.text = "Teste";}, child: Text("teste"))
+        
+      ];
+    return Tab(
+      child: 
+      Column(children: [
+          Expanded(
+              child:ListView(
+                children: [Padding(
+                  padding: EdgeInsets.fromLTRB(0, 10, 0,0),
+                    child: Column(
+                      children: elementos,
+                          
+                    ),
+                  )
+                
+              ],
+            )
+          ),
+          //Expanded(child: Text("")),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
+            fillButton(() => sendCMD("C"), Text("CLB",style: TextStyle(fontSize: 18, color: corBotAzul, fontWeight: FontWeight.bold)), 0),
             fillButton(() => sendCMD("S"), Text("SET",style: TextStyle(fontSize: 18, color: corBotAzul, fontWeight: FontWeight.bold)), 0),
             fillButton(() => sendCMD("R"), Text("RUN",style: TextStyle(fontSize: 18, color: corBotAzul, fontWeight: FontWeight.bold),), 0),
             fillButton(() => sendCMD("P"), Text("STOP",style: TextStyle(fontSize: 18, color: corBotAzul, fontWeight: FontWeight.bold),), 0),
             
           ],
         ),
-        //ElevatedButton(onPressed: () {mapa.text = "Teste";}, child: Text("teste"))
-        
-      ];
-    return Tab(
-      child: 
-        CustomScrollView(
-          slivers: [SliverFillRemaining(
-            hasScrollBody: false,
-            child:Padding(
-              padding: EdgeInsets.fromLTRB(0, 10, 0,0),
-                child: Column(
-                  children: elementos,
-                      
-                ),
-              )
-            )
-          ],
-        ),
+        ]
+      )
       );
   }
   
@@ -680,16 +827,8 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
     return Tab(child: Container(
       padding: EdgeInsets.all(8),
       alignment: Alignment.topCenter,
-      child:Column(
-      children:[
-        Expanded(child: SizedBox()),
-        fillButton( () => sendCMD("C"), Text("CALIBRAÇÃO", style: TextStyle(fontSize: 20),), 30, f:2),
-        Expanded(child: SizedBox()),
-        fillButton( () => sendCMD("R"), Text("RUN", style: TextStyle(fontSize: 20,color: corBotAzul),), 30, f:2),
-        Expanded(child: SizedBox()),
-        fillButton( () => sendCMD("P"), Text("STOP", style: TextStyle(fontSize: 20,color: corBotAzul),), 30, f:2),
-        Expanded(child: SizedBox()),
-        /*Container(
+      child:Column(children:[ 
+        Container(
           padding: EdgeInsets.all(8),
           child: Text("MAPA:\n\n(0 -> CURVA | 1 -> RETA)",style: TextStyle(fontSize: 20), textAlign: TextAlign.center,)
         ),
@@ -703,7 +842,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
             enabledBorder: OutlineInputBorder(borderSide: BorderSide(color: Color.fromARGB(255, 0, 0, 0))),
             focusedBorder: OutlineInputBorder(borderSide: BorderSide(color: Color.fromARGB(255, 0, 85, 255)))
           ),
-        )*/
+        )
       ])
     ) 
   );
@@ -722,7 +861,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
               base: Container(height: 280, width: 280, decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.transparent),),
               stick: Container(height: 130, width: 130, decoration: BoxDecoration(shape: BoxShape.circle, color: corBotAzul),),
               mode: JoystickMode.all,
-              period: Duration(milliseconds: 100),
+              period: Duration(milliseconds: 1),
               listener: (details) {
                 setState(() {
 
@@ -732,6 +871,9 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
                   _x = 0 + step * details.x;
                   _y = 0 + step * details.y;
                 });
+              },
+              onStickDragEnd: (){
+                sendCMD("J:0,0,$step;");
               },
             ),
           ],
@@ -767,7 +909,7 @@ class MainPageState extends State<MainPage>with SingleTickerProviderStateMixin {
                     width: 30,
                     primaryColor: Color.fromARGB(255, 0, 0, 0),
                     animateOnTap: false,
-                    child: Icon(Icons.bluetooth, color: corBotAzul,),
+                    child: Icon(tipoCnx == "WIFI"? Icons.wifi : Icons.bluetooth, color: corBotAzul,),
                     
                   )
                 ),

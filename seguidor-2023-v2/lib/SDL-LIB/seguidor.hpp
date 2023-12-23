@@ -30,6 +30,8 @@ class Seguidor_de_Linha
         //-------------------//
         unsigned long tmp_fora_linha = 0;
         int qnt_linhas = 2;
+        int marcacoes_secao = 0;
+        int marcacoes_chegada = 0;
         unsigned long curva_time = 0;
         char direcao_atual = 'F';
         char lado_pista = 'D';
@@ -45,7 +47,7 @@ class Seguidor_de_Linha
         bool ler_sensores_sem_pausa = false;
         bool ler_sensores_fast = false;
 
-        unsigned long TMP_calib = 15;
+        unsigned long TMP_calib = 30000;
         unsigned long tempo = TMP_calib;
         bool Estado_corrida = false;
 

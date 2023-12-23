@@ -2,9 +2,10 @@
 
 void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
 {
+    
     if(abs(erro) > abs(maior_erro_curva)) maior_erro_curva = erro;
-    if((abs(erro) > 3) && (estado == false)) prox_secao();
-    else if((abs(erro) < 0.5)  && (estado == true) && (abs(maior_erro_curva) >= 3)) prox_secao();
+    if((abs(erro) > 5) && (estado == false)) prox_secao();
+    else if((abs(erro) < 0.5) && (estado == true) && (abs(maior_erro_curva) >= 3)) prox_secao();
 
     if(abs(erro_antigo) != 30 && (abs(erro) == 30)){
         erro_perda = erro_antigo;
@@ -14,9 +15,20 @@ void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
     }
     float PID = get_correcao(erro);
     int v_max = vel_max;
-    float _K = (micros()  - tmp_last_reta) * K/1000.00;
-    if(estado) v_max = vel_max - _K * abs(erro - erro_perda);
-    if(vel_max < 40) vel_max = 40;
+    /*float _K = (micros()  - tmp_last_reta) * K/1000.00;
+    if(estado) v_max = vel_max - _K;
+    if(vel_max < 40) vel_max = 40;*/
+    if(abs(erro) == 30){
+        /*if(abs(erro_antigo) != 30){
+            tmp_perda = millis();
+        }
+        else if(millis() - tmp_perda >= 5){*/
+            (*m_dir).set_velocidade_fast(-90);
+            (*m_esq).set_velocidade_fast(-90);
+
+            /*return;
+        }*/
+    }
     if(PID >= 0){
         float vel_corrigida = v_max - PID;
         if(vel_corrigida < vel_min) vel_corrigida = vel_min;
@@ -34,6 +46,9 @@ void controlador_PID::corrigir_trajeto(float erro, motor * m_dir, motor * m_esq)
 }
 bool controlador_PID::get_estado_secao(){
     return estado;
+}
+int controlador_PID::get_K(){
+    return K;
 }
 void controlador_PID::corrigir_trajeto_sem_mover(float erro, motor * m_dir, motor * m_esq){
     float PID = get_correcao(erro);
@@ -53,10 +68,12 @@ void controlador_PID::corrigir_trajeto_sem_mover(float erro, motor * m_dir, moto
 float controlador_PID::get_correcao(float erro, bool att){
     float _kp = Kp, _kd = Kd,_ki = Ki;
     
+    //if(estado) _kd = 2500;
     float d_tempo = (micros() - tmp_passado) /1000.00;
     if(d_tempo == 0) d_tempo = 1;
     tmp_passado = micros();
-
+    
+    if(abs(erro) > 2) _kd = 3000;
     erro_I += erro - erro_antigo;
     if((erro_I <= 0 && (erro - erro_antigo >= 0)) || (erro_I >= 0 && (erro - erro_antigo <= 0)))// || (abs(erro) < 0.1))
 		erro_I = 0;

@@ -32,20 +32,20 @@ void Seguidor_de_Linha::joystick_control(String cmd){
         return;
     }
     
-    int vel_max_joystick = 100;
+    int vel_max_joystick = 140;
+    int vel_base = 70;
     float fat_drc = y/raio;
     float fat_rot = x/raio;
 
-    int vel_drc = -fat_drc * vel_max_joystick + (-fat_drc > 0? 50:-50);
-    int vel_rot = -fat_rot * vel_max_joystick + (-fat_rot > 0? 50:-50);
+    int vel_drc = -fat_drc * (vel_max_joystick - vel_base) + (-fat_drc > 0? vel_base:-vel_base);
+    int vel_rot = -fat_rot * (vel_max_joystick - vel_base) + (-fat_rot > 0? vel_base:-vel_base);
 
 
 	set_direcao('F');
-    if(abs(fat_rot) < 0.1){
-        vel_drc +=(-fat_drc > 0? 50:-50);
+    if(abs(fat_rot) < 0.15){
         set_velocidade(vel_drc, vel_drc);
     }
-    else if(abs(fat_drc) < 0.1){
+    else if(abs(fat_drc) < 0.15){
         set_velocidade(vel_rot, -vel_rot);
     }
     else if(vel_rot > 0){

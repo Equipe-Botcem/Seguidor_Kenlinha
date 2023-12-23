@@ -4,7 +4,7 @@
 class sensores_frontais
 {
 private:
-	const static int N_sns = 6;
+	const static int N_sns = 8;
 	float tolerancia = 0.3;
     float erro_antigo = 0;
 	float erro_antigo2 = 0;

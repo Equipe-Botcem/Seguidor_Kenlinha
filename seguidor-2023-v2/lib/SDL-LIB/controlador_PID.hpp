@@ -5,12 +5,12 @@
 class controlador_PID
 {
 private:
-    int vel_max = 200;
-    int vel_min = -200;
+    int vel_max = 150;
+    int vel_min = -150;
     /*float Kp = 25;
     float Ki = 0.0170968;
     float Kd = 1642;*/
-    float K = 0.01;//3;
+    float K = 0.00;//3;
     float Kp = 25;
     float Ki = 3;//2.6899;
     float Kd = 1500.4;//2500.4;
@@ -36,6 +36,7 @@ private:
     float LKi = 13;
     float LKd = 50;
 
+    unsigned long tmp_perda =0;
     unsigned long tmp_last_curva = 0;
     float maior_erro_curva = 0;
     unsigned long tmp_last_reta=0;
@@ -70,6 +71,8 @@ public:
     bool get_estado_secao();
     int get_controle_secao();
     float get_erro_antigo();
+
+    int get_K();
 
     float get_correcao(float erro, bool att = true);
 
