@@ -1,0 +1,25 @@
+{
+    "project_name":       "bootloader",
+    "project_path":       "/home/jeiel/.platformio/packages/framework-espidf/components/bootloader/subproject",
+    "build_dir":          "/home/jeiel/Documentos/Botcem/git/seguidor-2023-esp32/.pio/build/esp32-s3-devkitc-1/bootloader",
+    "config_file":        "/home/jeiel/Documentos/Botcem/git/seguidor-2023-esp32/sdkconfig.esp32-s3-devkitc-1",
+    "config_defaults":    "",
+    "bootloader_elf":     "",
+    "app_elf":            "bootloader.elf",
+    "app_bin":            "bootloader.bin",
+    "git_revision":       "5.0.1",
+    "target":             "esp32s3",
+    "rev":                "",
+    "min_rev":            "0",
+    "max_rev":            "99",
+    "phy_data_partition": "",
+    "monitor_baud" :      "115200",
+    "monitor_toolprefix": "xtensa-esp32s3-elf-",
+    "config_environment" : {
+        "COMPONENT_KCONFIGS" : "/home/jeiel/.platformio/packages/framework-espidf/components/efuse/Kconfig;/home/jeiel/.platformio/packages/framework-espidf/components/esp_common/Kconfig;/home/jeiel/.platformio/packages/framework-espidf/components/esp_hw_support/Kconfig;/home/jeiel/.platformio/packages/framework-espidf/components/esp_system/Kconfig;/home/jeiel/.platformio/packages/framework-espidf/components/freertos/Kconfig;/home/jeiel/.platformio/packages/framework-espidf/components/hal/Kconfig;/home/jeiel/.platformio/packages/framework-espidf/components/log/Kconfig;/home/jeiel/.platformio/packages/framework-espidf/components/newlib/Kconfig;/home/jeiel/.platformio/packages/framework-espidf/components/spi_flash/Kconfig",
+        "COMPONENT_KCONFIGS_PROJBUILD" : "/home/jeiel/.platformio/packages/framework-espidf/components/bootloader/Kconfig.projbuild;/home/jeiel/.platformio/packages/framework-espidf/components/esp_app_format/Kconfig.projbuild;/home/jeiel/.platformio/packages/framework-espidf/components/esp_rom/Kconfig.projbuild;/home/jeiel/.platformio/packages/framework-espidf/components/esptool_py/Kconfig.projbuild;/home/jeiel/.platformio/packages/framework-espidf/components/partition_table/Kconfig.projbuild"
+    },
+    "build_components" : [ "bootloader", "bootloader_support", "efuse", "esp_app_format", "esp_common", "esp_hw_support", "esp_rom", "esp_system", "esptool_py", "freertos", "hal", "log", "main", "micro-ecc", "newlib", "partition_table", "soc", "spi_flash", "xtensa", "" ],
+    "build_component_paths" : [ "/home/jeiel/.platformio/packages/framework-espidf/components/bootloader", "/home/jeiel/.platformio/packages/framework-espidf/components/bootloader_support", "/home/jeiel/.platformio/packages/framework-espidf/components/efuse", "/home/jeiel/.platformio/packages/framework-espidf/components/esp_app_format", "/home/jeiel/.platformio/packages/framework-espidf/components/esp_common", "/home/jeiel/.platformio/packages/framework-espidf/components/esp_hw_support", "/home/jeiel/.platformio/packages/framework-espidf/components/esp_rom", "/home/jeiel/.platformio/packages/framework-espidf/components/esp_system", "/home/jeiel/.platformio/packages/framework-espidf/components/esptool_py", "/home/jeiel/.platformio/packages/framework-espidf/components/freertos", "/home/jeiel/.platformio/packages/framework-espidf/components/hal", "/home/jeiel/.platformio/packages/framework-espidf/components/log", "/home/jeiel/.platformio/packages/framework-espidf/components/bootloader/subproject/main", "/home/jeiel/.platformio/packages/framework-espidf/components/bootloader/subproject/components/micro-ecc", "/home/jeiel/.platformio/packages/framework-espidf/components/newlib", "/home/jeiel/.platformio/packages/framework-espidf/components/partition_table", "/home/jeiel/.platformio/packages/framework-espidf/components/soc", "/home/jeiel/.platformio/packages/framework-espidf/components/spi_flash", "/home/jeiel/.platformio/packages/framework-espidf/components/xtensa", "" ],
+    "debug_prefix_map_gdbinit": ""
+}
